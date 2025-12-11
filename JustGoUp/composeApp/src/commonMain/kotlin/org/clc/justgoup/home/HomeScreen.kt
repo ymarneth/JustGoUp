@@ -13,15 +13,19 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import org.clc.justgoup.climbingSession.RecentClimbingSession
 import org.clc.justgoup.theme.BoulderTheme
+import org.clc.justgoup.theme.ThemeMode
 import org.clc.justgoup.theme.components.BoulderButton
 import org.clc.justgoup.theme.components.GradeChip
 import org.clc.justgoup.theme.components.SessionCard
+import org.clc.justgoup.theme.components.ThemeChip
 
 @Composable
 fun HomeScreen(
     recentClimbingSessions: List<RecentClimbingSession>,
     onStartSession: () -> Unit,
     onOpenSession: (String) -> Unit,
+    onChangeTheme: (ThemeMode) -> Unit,
+    currentTheme: ThemeMode
 ) {
     Column(
         modifier = Modifier
@@ -51,6 +55,26 @@ fun HomeScreen(
                 modifier = Modifier
                     .shadow(6.dp, RoundedCornerShape(20.dp))
             )
+        }
+
+        Spacer(Modifier.height(BoulderTheme.spacing.extraLarge.dp))
+
+        // ---- THEME SWITCHER SECTION ----
+        Text(
+            text = "Theme",
+            style = BoulderTheme.typography.titleMedium,
+            color = BoulderTheme.colors.textPrimary
+        )
+
+        Spacer(Modifier.height(BoulderTheme.spacing.small.dp))
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            ThemeChip("System", ThemeMode.SYSTEM, currentTheme, onChangeTheme)
+            ThemeChip("Light", ThemeMode.LIGHT, currentTheme, onChangeTheme)
+            ThemeChip("Dark", ThemeMode.DARK, currentTheme, onChangeTheme)
         }
 
         Spacer(Modifier.height(BoulderTheme.spacing.extraLarge.dp))

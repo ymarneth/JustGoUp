@@ -6,6 +6,7 @@ import org.clc.justgoup.climbingSession.RecentClimbingSession
 import org.jetbrains.compose.ui.tooling.preview.Preview
 import org.clc.justgoup.home.HomeScreen
 import org.clc.justgoup.theme.BoulderTheme
+import org.clc.justgoup.theme.ThemeMode
 
 @Composable
 @Preview
@@ -28,11 +29,15 @@ fun App() {
         )
     )
 
-    BoulderTheme {
+    var themeMode by remember { mutableStateOf(ThemeMode.SYSTEM) }
+
+    BoulderTheme(themeMode = themeMode) {
         HomeScreen(
             recentClimbingSessions = exampleSessions,
-            onStartSession = { /* TODO: navigate to create session */ },
-            onOpenSession = { id -> /* TODO: open existing session */ }
+            onStartSession = { /* ... */ },
+            onOpenSession = { id -> /* ... */ },
+            onChangeTheme = { mode -> themeMode = mode },
+            currentTheme = themeMode
         )
     }
 }

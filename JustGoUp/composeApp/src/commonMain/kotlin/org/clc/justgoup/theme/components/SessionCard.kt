@@ -24,7 +24,7 @@ fun SessionCard(
             .background(BoulderTheme.colors.surface, RoundedCornerShape(20.dp))
             .padding(16.dp)
     ) {
-        Text(title, style = BoulderTheme.typography.titleMedium)
+        Text(title, style = BoulderTheme.typography.titleMedium, color = BoulderTheme.colors.textPrimary)
         Spacer(Modifier.height(4.dp))
         Text(date.asShortDate(), style = BoulderTheme.typography.body, color = BoulderTheme.colors.textSecondary)
         Text(location, style = BoulderTheme.typography.body, color = BoulderTheme.colors.textSecondary)
