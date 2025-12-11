@@ -42,24 +42,32 @@ fun HomeScreen(
         Spacer(Modifier.height(BoulderTheme.spacing.large.dp))
 
         // Title
-        Text(
-            text = "Just Go Up 🧗‍♂️",
-            style = BoulderTheme.typography.titleLarge,
-            color = BoulderTheme.colors.textPrimary
-        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.Center
+        ) {
+            Text(
+                text = "Just go up!",
+                style = BoulderTheme.typography.titleLarge,
+                color = BoulderTheme.colors.textPrimary
+            )
+        }
 
         Spacer(Modifier.height(BoulderTheme.spacing.large.dp))
 
         // ---- THEME SWITCHER SECTION ----
-        Text(
-            text = "Theme",
-            style = BoulderTheme.typography.titleMedium,
-            color = BoulderTheme.colors.textPrimary
-        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            ThemeChip("System", ThemeMode.SYSTEM, currentTheme, onChangeTheme)
+            ThemeChip("Light", ThemeMode.LIGHT, currentTheme, onChangeTheme)
+            ThemeChip("Dark", ThemeMode.DARK, currentTheme, onChangeTheme)
+        }
 
-        Spacer(Modifier.height(BoulderTheme.spacing.small.dp))
+        Spacer(Modifier.height(BoulderTheme.spacing.large.dp))
 
-        // Start new session
+        // ---- START NEW SESSION ----
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.Center
@@ -74,18 +82,7 @@ fun HomeScreen(
 
         Spacer(Modifier.height(BoulderTheme.spacing.extraLarge.dp))
 
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            ThemeChip("System", ThemeMode.SYSTEM, currentTheme, onChangeTheme)
-            ThemeChip("Light", ThemeMode.LIGHT, currentTheme, onChangeTheme)
-            ThemeChip("Dark", ThemeMode.DARK, currentTheme, onChangeTheme)
-        }
-
-        Spacer(Modifier.height(BoulderTheme.spacing.extraLarge.dp))
-
-        // Recent sessions
+        // ---- RECENT SESSIONS ----
         Text(
             text = "Recent Sessions",
             style = BoulderTheme.typography.titleMedium,
