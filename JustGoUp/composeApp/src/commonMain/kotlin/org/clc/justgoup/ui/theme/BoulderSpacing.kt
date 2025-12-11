@@ -1,4 +1,4 @@
-package org.clc.justgoup.theme
+package org.clc.justgoup.ui.theme
 
 import androidx.compose.runtime.staticCompositionLocalOf
 

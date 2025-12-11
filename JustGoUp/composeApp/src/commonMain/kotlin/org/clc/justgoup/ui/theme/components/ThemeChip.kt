@@ -1,4 +1,4 @@
-package org.clc.justgoup.theme.components
+package org.clc.justgoup.ui.theme.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -10,8 +10,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.unit.dp
-import org.clc.justgoup.theme.BoulderTheme
-import org.clc.justgoup.theme.ThemeMode
+import org.clc.justgoup.ui.theme.BoulderTheme
+import org.clc.justgoup.ui.theme.ThemeMode
 
 @Composable
 fun ThemeChip(
@@ -23,7 +23,8 @@ fun ThemeChip(
     val selected = current == mode
 
     val bg = if (selected) BoulderTheme.colors.primary else BoulderTheme.colors.surface
-    val textColor = if (selected) BoulderTheme.colors.textPrimary else BoulderTheme.colors.textSecondary
+    val textColor =
+        if (selected) BoulderTheme.colors.textPrimary else BoulderTheme.colors.textSecondary
 
     Box(
         modifier = Modifier

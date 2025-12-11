@@ -1,6 +1,6 @@
-package org.clc.justgoup.helpers
+package org.clc.justgoup.ui.helpers
 
-import kotlinx.datetime.*
+import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.number
 
 fun LocalDateTime.asShortDate(): String =

@@ -1,7 +1,15 @@
-package org.clc.justgoup.home
+package org.clc.justgoup.ui.home
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -12,12 +20,12 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import org.clc.justgoup.climbingSession.RecentClimbingSession
-import org.clc.justgoup.theme.BoulderTheme
-import org.clc.justgoup.theme.ThemeMode
-import org.clc.justgoup.theme.components.BoulderButton
-import org.clc.justgoup.theme.components.GradeChip
-import org.clc.justgoup.theme.components.SessionCard
-import org.clc.justgoup.theme.components.ThemeChip
+import org.clc.justgoup.ui.theme.BoulderTheme
+import org.clc.justgoup.ui.theme.ThemeMode
+import org.clc.justgoup.ui.theme.components.BoulderButton
+import org.clc.justgoup.ui.theme.components.GradeChip
+import org.clc.justgoup.ui.theme.components.SessionCard
+import org.clc.justgoup.ui.theme.components.ThemeChip
 
 @Composable
 fun HomeScreen(

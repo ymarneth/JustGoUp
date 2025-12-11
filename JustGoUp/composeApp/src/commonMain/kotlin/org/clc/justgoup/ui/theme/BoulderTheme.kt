@@ -1,7 +1,9 @@
-package org.clc.justgoup.theme
+package org.clc.justgoup.ui.theme
 
 import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.staticCompositionLocalOf
 
 private val LocalColors = staticCompositionLocalOf { BoulderLightColors }
 
