@@ -1,6 +1,7 @@
 package org.clc.justgoup.boulder
 
 data class Boulder(
+    val id: String,
     val grade: Grade,
     val attempts: Int,
     val sent: Boolean,
