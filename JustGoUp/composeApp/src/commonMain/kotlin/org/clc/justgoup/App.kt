@@ -1,49 +1,38 @@
 package org.clc.justgoup
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.safeContentPadding
-import androidx.compose.material3.Button
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import org.jetbrains.compose.resources.painterResource
+import kotlinx.datetime.LocalDateTime
+import org.clc.justgoup.climbingSession.RecentClimbingSession
 import org.jetbrains.compose.ui.tooling.preview.Preview
-
-import justgoup.composeapp.generated.resources.Res
-import justgoup.composeapp.generated.resources.compose_multiplatform
+import org.clc.justgoup.home.HomeScreen
+import org.clc.justgoup.theme.BoulderTheme
 
 @Composable
 @Preview
 fun App() {
-    MaterialTheme {
-        var showContent by remember { mutableStateOf(false) }
-        Column(
-            modifier = Modifier
-                .background(MaterialTheme.colorScheme.primaryContainer)
-                .safeContentPadding()
-                .fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            Button(onClick = { showContent = !showContent }) {
-                Text("Click me!")
-            }
-            AnimatedVisibility(showContent) {
-                val greeting = remember { Greeting().greet() }
-                Column(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                ) {
-                    Image(painterResource(Res.drawable.compose_multiplatform), null)
-                    Text("Compose: $greeting")
-                }
-            }
-        }
+    // Example fake data for now
+    val exampleSessions = listOf(
+        RecentClimbingSession(
+            id = "1",
+            title = "Evening Session",
+            location = "Boulderbar Linz",
+            date = LocalDateTime(2025, 12, 5, 18, 30),
+            boulders = 12
+        ),
+        RecentClimbingSession(
+            id = "2",
+            title = "Morning Training",
+            location = "derSteinbock Linz",
+            date = LocalDateTime(2025, 12, 3, 9, 0),
+            boulders = 8
+        )
+    )
+
+    BoulderTheme {
+        HomeScreen(
+            recentClimbingSessions = exampleSessions,
+            onStartSession = { /* TODO: navigate to create session */ },
+            onOpenSession = { id -> /* TODO: open existing session */ }
+        )
     }
 }
