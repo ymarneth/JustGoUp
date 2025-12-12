@@ -17,6 +17,7 @@ class ClimbingSessionRepository {
             endTime = LocalDateTime(2025, 12, 5, 20, 0),
             boulders = listOf(
                 Boulder(
+                    id = "1",
                     grade = Grade.VScale(VGrade(3)),
                     attempts = 1,
                     sent = true,
@@ -24,6 +25,7 @@ class ClimbingSessionRepository {
                     color = HoldColor.BLUE
                 ),
                 Boulder(
+                    id = "2",
                     grade = Grade.VScale(VGrade(4)),
                     attempts = 2,
                     sent = true,
@@ -38,12 +40,19 @@ class ClimbingSessionRepository {
             endTime = LocalDateTime(2025, 12, 3, 10, 30),
             boulders = listOf(
                 Boulder(
+                    id = "3",
                     grade = Grade.VScale(VGrade(2)),
                     attempts = 1,
                     sent = true,
                     color = HoldColor.GREEN
                 ),
-                Boulder(grade = Grade.VScale(VGrade(3)), attempts = 2, sent = true, flash = true)
+                Boulder(
+                    id = "4",
+                    grade = Grade.VScale(VGrade(3)),
+                    attempts = 2,
+                    sent = true,
+                    flash = true
+                )
             )
         )
     )

@@ -41,7 +41,7 @@ fun HomeScreenContent(
     ) {
         Spacer(Modifier.height(BoulderTheme.spacing.large.dp))
 
-        // Title
+        // ---- TITLE ----
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.Center
@@ -86,7 +86,8 @@ fun HomeScreenContent(
         Text(
             text = "Recent Sessions",
             style = BoulderTheme.typography.titleMedium,
-            color = BoulderTheme.colors.textPrimary
+            color =
+                BoulderTheme.colors.textPrimary
         )
 
         Spacer(Modifier.height(BoulderTheme.spacing.medium.dp))
