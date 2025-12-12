@@ -57,6 +57,11 @@ class ClimbingSessionRepository {
         )
     )
 
+    fun getSessionById(sessionId: String): Flow<ClimbingSession?> = flow {
+        val session = sampleSessions.find { it.id == sessionId }
+        emit(session)
+    }
+
     fun getRecentSessions(): Flow<List<RecentClimbingSession>> = flow {
         emit(sampleSessions.map { it.toRecent() })
     }
