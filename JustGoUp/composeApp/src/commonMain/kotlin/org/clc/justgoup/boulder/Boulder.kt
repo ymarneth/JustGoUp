@@ -51,3 +51,10 @@ data class VGrade(
 enum class HoldColor {
     RED, PINK, BLUE, GREEN, TEAL, YELLOW, ORANGE, PURPLE, BLACK, WHITE, GREY
 }
+
+fun Grade.toDisplayString(): String = when (this) {
+    Grade.None -> "-"
+    is Grade.French -> this.value.toString()
+    is Grade.VScale -> this.value.toString()
+}
+

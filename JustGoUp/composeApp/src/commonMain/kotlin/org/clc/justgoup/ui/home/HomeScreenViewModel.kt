@@ -21,8 +21,6 @@ class HomeScreenViewModel(
 
 val HomeScreenModelFactory = viewModelFactory {
     initializer {
-        HomeScreenViewModel(repository = getClimbingSessionRepository())
+        HomeScreenViewModel(repository = ClimbingSessionRepository)
     }
 }
-
-fun getClimbingSessionRepository(): ClimbingSessionRepository = ClimbingSessionRepository()

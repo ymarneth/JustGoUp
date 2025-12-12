@@ -1,12 +1,12 @@
 package org.clc.justgoup.ui.home
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -20,53 +20,16 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.unit.dp
 import org.clc.justgoup.climbingSession.RecentClimbingSession
 import org.clc.justgoup.ui.theme.BoulderTheme
-import org.clc.justgoup.ui.theme.ThemeMode
 import org.clc.justgoup.ui.theme.components.BoulderButton
 import org.clc.justgoup.ui.theme.components.SessionCard
-import org.clc.justgoup.ui.theme.components.ThemeChip
 
 @Composable
 fun HomeScreenContent(
     recentClimbingSessions: List<RecentClimbingSession>,
     onStartSession: () -> Unit,
-    onOpenSession: (String) -> Unit,
-    onChangeTheme: (ThemeMode) -> Unit,
-    currentTheme: ThemeMode
+    onOpenSession: (String) -> Unit
 ) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(BoulderTheme.colors.background)
-            .padding(horizontal = BoulderTheme.spacing.medium.dp)
-    ) {
-        Spacer(Modifier.height(BoulderTheme.spacing.large.dp))
-
-        // Title
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.Center
-        ) {
-            Text(
-                text = "Just go up!",
-                style = BoulderTheme.typography.titleLarge,
-                color = BoulderTheme.colors.textPrimary
-            )
-        }
-
-        Spacer(Modifier.height(BoulderTheme.spacing.large.dp))
-
-        // ---- THEME SWITCHER SECTION ----
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            ThemeChip("System", ThemeMode.SYSTEM, currentTheme, onChangeTheme)
-            ThemeChip("Light", ThemeMode.LIGHT, currentTheme, onChangeTheme)
-            ThemeChip("Dark", ThemeMode.DARK, currentTheme, onChangeTheme)
-        }
-
-        Spacer(Modifier.height(BoulderTheme.spacing.large.dp))
-
+    Column {
         // ---- START NEW SESSION ----
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -86,7 +49,8 @@ fun HomeScreenContent(
         Text(
             text = "Recent Sessions",
             style = BoulderTheme.typography.titleMedium,
-            color = BoulderTheme.colors.textPrimary
+            color =
+                BoulderTheme.colors.textPrimary
         )
 
         Spacer(Modifier.height(BoulderTheme.spacing.medium.dp))
@@ -106,6 +70,9 @@ fun HomeScreenContent(
                         .shadow(2.dp, RoundedCornerShape(20.dp))
                         .background(BoulderTheme.colors.surface)
                         .padding(4.dp)
+                        .clickable {
+                            onOpenSession(session.id)
+                        }
                 )
             }
         }
