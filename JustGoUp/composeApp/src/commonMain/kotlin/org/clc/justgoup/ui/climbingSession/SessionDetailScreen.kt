@@ -1,15 +1,15 @@
 package org.clc.justgoup.ui.climbingSession
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -17,7 +17,7 @@ import org.clc.justgoup.ui.theme.BoulderTheme
 
 @Composable
 fun SessionDetailScreen(
-    sessionId: String
+    sessionId: String,
 ) {
     val viewModel: SessionDetailScreenViewModel = viewModel(
         factory = sessionDetailScreenViewModelFactory(sessionId)
@@ -25,30 +25,36 @@ fun SessionDetailScreen(
 
     val session by viewModel.session.collectAsState()
 
-    Column {
-        Spacer(Modifier.height(BoulderTheme.spacing.large.dp))
+    session?.let { session ->
 
-        // Session info
-        Text(
-            text = "Session ID: $sessionId",
-            style = BoulderTheme.typography.titleMedium,
-            color = BoulderTheme.colors.textPrimary
-        )
+        LazyColumn(
+            verticalArrangement = Arrangement.spacedBy(BoulderTheme.spacing.large.dp)
+        ) {
 
-        Spacer(Modifier.height(BoulderTheme.spacing.medium.dp))
-
-        session?.let { session ->
-            LazyColumn(
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                items(session.boulders) { boulder ->
-                    Text(
-                        text = "Boulder: ${boulder.grade}, attempts: ${boulder.attempts}, sent: ${boulder.sent}",
-                        style = BoulderTheme.typography.body,
-                        color = BoulderTheme.colors.textSecondary
-                    )
-                }
+            // --- HEADER ---
+            item {
+                SessionHeader(session = session)
             }
+
+            // --- ADD BOULDER BUTTON ----
+            item {
+                AddBoulderButton(onAdd = {
+                    // TODO: Implement
+                })
+            }
+
+            // --- BOULDER LIST ---
+            items(session.boulders) { boulder ->
+                BoulderCard(boulder = boulder)
+            }
+        }
+    } ?: run {
+        // Show loading / placeholder
+        Box(
+            Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            Text("Loading session…", color = BoulderTheme.colors.textSecondary)
         }
     }
 }
