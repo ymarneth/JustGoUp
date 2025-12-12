@@ -20,17 +20,15 @@ class SessionDetailScreenViewModel(
             .stateIn(
                 viewModelScope,
                 SharingStarted.Lazily,
-                null // initial value
+                null
             )
 }
 
 fun sessionDetailScreenViewModelFactory(sessionId: String) = viewModelFactory {
     initializer {
         SessionDetailScreenViewModel(
-            repository = getClimbingSessionRepository(),
+            repository = ClimbingSessionRepository,
             sessionId = sessionId
         )
     }
 }
-
-fun getClimbingSessionRepository(): ClimbingSessionRepository = ClimbingSessionRepository()

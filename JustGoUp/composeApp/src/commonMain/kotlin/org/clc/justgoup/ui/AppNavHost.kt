@@ -55,11 +55,9 @@ fun AppNavHost(
             composable<SessionDetail> { backStack ->
                 val args = backStack.toRoute<SessionDetail>()
                 SessionDetailScreen(
-                    sessionId = args.sessionId,
-                    onBack = { nav.popBackStack() }
+                    sessionId = args.sessionId
                 )
             }
         }
     }
 }
-
