@@ -31,6 +31,9 @@ kotlin {
             implementation(compose.preview)
             implementation(libs.androidx.activity.compose)
             implementation(libs.sqldelight.android)
+            // --- Koin (Android) ---
+            implementation(libs.koin.android)
+            implementation(libs.koin.androidx.compose)
         }
         commonMain.dependencies {
             implementation(compose.runtime)
@@ -45,6 +48,8 @@ kotlin {
             implementation(libs.kotlinx.datetime)
             implementation(libs.sqldelight.runtime)
             implementation(libs.sqldelight.coroutines)
+            // --- Koin (common) ---
+            implementation(libs.koin.core)
         }
         iosMain.dependencies {
             implementation(libs.sqldelight.native)
