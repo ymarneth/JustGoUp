@@ -1,20 +1,22 @@
+import kotlinx.datetime.LocalDateTime;
+
 CREATE TABLE climbing_session (
-  id            TEXT        NOT NULL,
-  location      TEXT        NOT NULL,
-  startTime     TEXT        NOT NULL,
-  endTime       TEXT,
+  id            TEXT                    NOT NULL,
+  location      TEXT                    NOT NULL,
+  startTime     TEXT AS LocalDateTime   NOT NULL,
+  endTime       TEXT AS LocalDateTime,
   notes         TEXT,
   CONSTRAINT pk_climbing_session PRIMARY KEY(id)
 );
 
 CREATE TABLE boulder (
-  id            TEXT        NOT NULL,
-  sessionId     TEXT        NOT NULL,
-  gradeType     TEXT        NOT NULL,
+  id            TEXT                NOT NULL,
+  sessionId     TEXT                NOT NULL,
+  gradeType     TEXT                NOT NULL,
   gradeValue    TEXT,
-  attempts      INTEGER     NOT NULL,
-  sent          INTEGER     NOT NULL,
-  flash         INTEGER     NOT NULL,
+  attempts      INTEGER             NOT NULL,
+  sent          INTEGER             NOT NULL,
+  flash         INTEGER             NOT NULL,
   color         TEXT,
   notes         TEXT,
   CONSTRAINT pk_boulder PRIMARY KEY(id),
