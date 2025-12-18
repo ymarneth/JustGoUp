@@ -4,20 +4,17 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import org.clc.justgoup.climbingSession.ClimbingSessionRepository
-
+import org.clc.justgoup.di.provideClimbingSessionRepository
 
 @Composable
-fun HomeScreen(
-    repository: ClimbingSessionRepository,
+fun Home(
     onStartSession: () -> Unit,
     onOpenSession: (String) -> Unit
 ) {
-    val scope = rememberCoroutineScope()
-    val viewModel = remember { HomeViewModel(repository, scope) }
+    val repository = provideClimbingSessionRepository()
+    val viewModel = remember { HomeViewModel(repository) }
 
-    val recentSessions by viewModel.recentSessions.collectAsState()
+    val recentSessions by viewModel.recentSessions.collectAsState(initial = emptyList())
 
     HomeScreenContent(
         recentClimbingSessions = recentSessions,

@@ -14,7 +14,7 @@ import androidx.navigation.toRoute
 import kotlinx.serialization.Serializable
 import org.clc.justgoup.ui.climbingSession.SessionDetailScreen
 import org.clc.justgoup.ui.header.HeaderScreen
-import org.clc.justgoup.ui.home.HomeScreen
+import org.clc.justgoup.ui.home.Home
 import org.clc.justgoup.ui.theme.BoulderTheme
 import org.clc.justgoup.ui.theme.ThemeMode
 
@@ -46,7 +46,7 @@ fun AppNavHost(
 
         NavHost(navController = nav, startDestination = Home) {
             composable<Home> {
-                HomeScreen(
+                Home(
                     onStartSession = { /* TODO */ },
                     onOpenSession = { id -> nav.navigate(SessionDetail(id)) }
                 )
