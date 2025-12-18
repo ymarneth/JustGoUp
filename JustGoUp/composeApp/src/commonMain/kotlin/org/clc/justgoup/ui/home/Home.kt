@@ -8,7 +8,6 @@ import org.clc.justgoup.di.provideClimbingSessionRepository
 
 @Composable
 fun Home(
-    onStartSession: () -> Unit,
     onOpenSession: (String) -> Unit
 ) {
     val repository = provideClimbingSessionRepository()
@@ -18,7 +17,7 @@ fun Home(
 
     HomeScreenContent(
         recentClimbingSessions = recentSessions,
-        onStartSession = onStartSession,
+        onStartSession = { viewModel.startSession { newId -> onOpenSession(newId) } },
         onOpenSession = onOpenSession
     )
 }

@@ -6,12 +6,17 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.unit.dp
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toInstant
+import kotlinx.datetime.toLocalDateTime
 import org.clc.justgoup.climbingSession.ClimbingSession
 import org.clc.justgoup.ui.helpers.durationMinutes
 import org.clc.justgoup.ui.helpers.formatDuration
 import org.clc.justgoup.ui.helpers.formatTime
 import org.clc.justgoup.ui.theme.BoulderTheme
+import kotlin.time.ExperimentalTime
 
+@OptIn(ExperimentalTime::class)
 @Composable
 fun SessionHeader(
     session: ClimbingSession
@@ -29,7 +34,12 @@ fun SessionHeader(
             val minutes = durationMinutes(session.startTime, session.endTime)
             formatDuration(minutes)
         } else {
-            "Started at ${session.startTime.formatTime()}"
+            "Started at ${
+                session.startTime
+                    .toInstant(TimeZone.UTC)
+                    .toLocalDateTime(TimeZone.currentSystemDefault())
+                    .formatTime()
+            }"
         }
 
         Text(

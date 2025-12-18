@@ -47,7 +47,6 @@ fun AppNavHost(
         NavHost(navController = nav, startDestination = Home) {
             composable<Home> {
                 Home(
-                    onStartSession = { /* TODO */ },
                     onOpenSession = { id -> nav.navigate(SessionDetail(id)) }
                 )
             }
