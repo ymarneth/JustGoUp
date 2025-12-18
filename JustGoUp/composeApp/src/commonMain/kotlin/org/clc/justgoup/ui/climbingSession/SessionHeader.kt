@@ -21,6 +21,20 @@ import kotlin.time.ExperimentalTime
 fun SessionHeader(
     session: ClimbingSession
 ) {
+    val running = session.endTime == null
+    val statusText = if (running) "Active session" else "Finished session"
+    val durationText = if (session.endTime != null) {
+        val minutes = durationMinutes(session.startTime, session.endTime)
+        formatDuration(minutes)
+    } else {
+        "Started at ${
+            session.startTime
+                .toInstant(TimeZone.UTC)
+                .toLocalDateTime(TimeZone.currentSystemDefault())
+                .formatTime()
+        }"
+    }
+
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text(
             text = session.location,
@@ -28,27 +42,12 @@ fun SessionHeader(
             color = BoulderTheme.colors.textPrimary
         )
 
-        val running = session.endTime == null
-        val statusText = if (running) "Active session" else "Finished session"
-        val durationText = if (session.endTime != null) {
-            val minutes = durationMinutes(session.startTime, session.endTime)
-            formatDuration(minutes)
-        } else {
-            "Started at ${
-                session.startTime
-                    .toInstant(TimeZone.UTC)
-                    .toLocalDateTime(TimeZone.currentSystemDefault())
-                    .formatTime()
-            }"
-        }
-
         Text(
             "$statusText • $durationText",
             style = BoulderTheme.typography.body,
             color = BoulderTheme.colors.textSecondary
         )
 
-        // Stats row
         Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
             StatChip(label = "Boulders", value = session.totalBoulders.toString())
             StatChip(label = "Sends", value = session.totalSends.toString())

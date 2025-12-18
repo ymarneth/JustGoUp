@@ -33,7 +33,7 @@ fun SessionDetailScreen(
                 SessionHeader(session = session)
             }
             item {
-                AddBoulderButton(onAdd = { /* TODO */ })
+                AddBoulderButton(onAdd = { viewModel.addBoulderToSession(sessionId) })
             }
             items(session.boulders) { boulder ->
                 BoulderCard(boulder = boulder)

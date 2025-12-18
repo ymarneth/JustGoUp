@@ -35,7 +35,7 @@ class HomeViewModel(
 
         val session = ClimbingSession(
             id = sessionId,
-            location = "Some location",
+            location = "Boulderbar Linz",
             startTime = now,
             endTime = null,
             notes = null
