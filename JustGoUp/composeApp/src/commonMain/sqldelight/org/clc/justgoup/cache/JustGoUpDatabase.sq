@@ -24,18 +24,51 @@ CREATE TABLE boulder (
 );
 
 -- QUERIES
-findAllSessions:
-SELECT * FROM climbing_session;
+findSessionsWithBoulders:
+SELECT
+    climbing_session.id            AS session_id,
+    climbing_session.location      AS session_location,
+    climbing_session.startTime     AS session_startTime,
+    climbing_session.endTime       AS session_endTime,
+    climbing_session.notes         AS session_notes,
 
-findSessionById:
-SELECT * FROM climbing_session WHERE id = ?;
+    boulder.id                     AS boulder_id,
+    boulder.gradeType              AS boulder_gradeType,
+    boulder.gradeValue             AS boulder_gradeValue,
+    boulder.attempts               AS boulder_attempts,
+    boulder.sent                   AS boulder_sent,
+    boulder.flash                  AS boulder_flash,
+    boulder.color                  AS boulder_color,
+    boulder.notes                  AS boulder_notes
+FROM climbing_session
+LEFT JOIN boulder
+    ON boulder.sessionId = climbing_session.id
+ORDER BY climbing_session.startTime DESC;
+
+findSessionWithBouldersById:
+SELECT
+    climbing_session.id            AS session_id,
+    climbing_session.location      AS session_location,
+    climbing_session.startTime     AS session_startTime,
+    climbing_session.endTime       AS session_endTime,
+    climbing_session.notes         AS session_notes,
+
+    boulder.id                     AS boulder_id,
+    boulder.gradeType              AS boulder_gradeType,
+    boulder.gradeValue             AS boulder_gradeValue,
+    boulder.attempts               AS boulder_attempts,
+    boulder.sent                   AS boulder_sent,
+    boulder.flash                  AS boulder_flash,
+    boulder.color                  AS boulder_color,
+    boulder.notes                  AS boulder_notes
+FROM climbing_session
+LEFT JOIN boulder
+    ON boulder.sessionId = climbing_session.id
+WHERE climbing_session.id = ?;
 
 insertSession:
 INSERT INTO climbing_session(id, location, startTime, endTime, notes)
 VALUES (?, ?, ?, ?, ?);
-
-findBouldersBySessionId:
-SELECT * FROM boulder WHERE sessionId = ?;
 
 insertBoulder:
 INSERT INTO boulder(id, sessionId, gradeType, gradeValue, attempts, sent, flash, color, notes)

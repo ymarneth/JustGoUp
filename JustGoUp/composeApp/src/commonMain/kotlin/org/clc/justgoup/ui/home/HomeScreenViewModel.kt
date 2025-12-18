@@ -15,7 +15,7 @@ class HomeScreenViewModel(
 ) : ViewModel() {
 
     val recentSessions: StateFlow<List<RecentClimbingSession>> =
-        repository.getRecentSessions()
+        repository.findRecentSessions()
             .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
 }
 
