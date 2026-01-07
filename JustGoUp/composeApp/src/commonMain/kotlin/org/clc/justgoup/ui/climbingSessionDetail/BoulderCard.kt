@@ -1,4 +1,4 @@
-package org.clc.justgoup.ui.climbingSession
+package org.clc.justgoup.ui.climbingSessionDetail
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement

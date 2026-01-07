@@ -70,6 +70,15 @@ insertSession:
 INSERT INTO climbing_session(id, location, startTime, endTime, notes)
 VALUES (?, ?, ?, ?, ?);
 
+updateSession:
+UPDATE climbing_session
+SET
+  location = :location,
+  startTime = :startTime,
+  endTime = :endTime,
+  notes = :notes
+WHERE id = :id;
+
 insertBoulder:
 INSERT INTO boulder(id, sessionId, gradeType, gradeValue, attempts, sent, flash, color, notes)
 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);

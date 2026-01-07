@@ -1,5 +1,6 @@
 package org.clc.justgoup.cache
 
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.LocalDateTime
@@ -59,7 +60,7 @@ internal class Database(
     internal suspend fun findSessionWithBouldersById(
         sessionId: String
     ): ClimbingSession? =
-        withContext(kotlinx.coroutines.Dispatchers.IO) {
+        withContext(Dispatchers.IO) {
             mapSessionsWithBoulders(
                 queries.findSessionWithBouldersById(sessionId) { sessionId,
                                                                  sessionLocation,
@@ -99,13 +100,29 @@ internal class Database(
         startTime: LocalDateTime,
         endTime: LocalDateTime?,
         notes: String?
-    ) = withContext(kotlinx.coroutines.Dispatchers.IO) {
+    ) = withContext(Dispatchers.IO) {
         queries.insertSession(
             id = id,
             location = location,
             startTime = startTime,
             endTime = endTime,
             notes = notes
+        )
+    }
+
+    internal suspend fun updateSession(
+        session: ClimbingSession,
+        location: String? = null,
+        startTime: LocalDateTime? = null,
+        endTime: LocalDateTime? = null,
+        notes: String? = null
+    ) = withContext(Dispatchers.IO) {
+        queries.updateSession(
+            location = location ?: session.location,
+            startTime = startTime ?: session.startTime,
+            endTime = endTime ?: session.endTime,
+            notes = notes ?: session.notes,
+            id = session.id
         )
     }
 
@@ -118,7 +135,7 @@ internal class Database(
         flash: Boolean,
         color: HoldColor,
         notes: String?
-    ) = withContext(kotlinx.coroutines.Dispatchers.IO) {
+    ) = withContext(Dispatchers.IO) {
         val (type, value) = GradeAdapter.encode(grade)
         queries.insertBoulder(
             id = id,

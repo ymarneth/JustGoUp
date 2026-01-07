@@ -18,7 +18,7 @@ fun HeaderScreen(
     currentTheme: ThemeMode,
     onChangeTheme: (ThemeMode) -> Unit
 ) {
-    Spacer(Modifier.height(BoulderTheme.spacing.large.dp))
+    Spacer(Modifier.height(BoulderTheme.spacing.extraLarge.dp))
 
     // ---- TITLE ----
     Row(
