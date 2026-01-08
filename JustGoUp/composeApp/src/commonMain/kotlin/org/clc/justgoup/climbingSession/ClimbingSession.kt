@@ -13,6 +13,7 @@ data class ClimbingSession(
 ) {
     val totalBoulders: Int get() = boulders.size
     val totalSends: Int get() = boulders.count { it.sent }
+    val totalFlashes: Int get() = boulders.count { it.flash }
 }
 
 data class RecentClimbingSession(

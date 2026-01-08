@@ -13,6 +13,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import kotlinx.serialization.Serializable
 import org.clc.justgoup.ui.climbingSessionDetail.SessionDetailScreen
+import org.clc.justgoup.ui.climbingSessionDetail.addBoulder.AddBoulder
 import org.clc.justgoup.ui.header.HeaderScreen
 import org.clc.justgoup.ui.home.Home
 import org.clc.justgoup.ui.home.addSession.AddSession
@@ -28,6 +29,9 @@ data class SessionDetail(val sessionId: String)
 
 @Serializable
 object AddSession
+
+@Serializable
+data class AddBoulder(val sessionId: String)
 
 // ---------- NAVIGATION HOST ----------
 @Composable
@@ -59,6 +63,7 @@ fun AppNavHost(
             composable<SessionDetail> { backStack ->
                 val args = backStack.toRoute<SessionDetail>()
                 SessionDetailScreen(
+                    onAddBoulder = { id -> nav.navigate(AddBoulder(id)) },
                     sessionId = args.sessionId
                 )
             }
@@ -72,6 +77,20 @@ fun AppNavHost(
                             }
                         }
                     }
+                )
+            }
+
+            composable<AddBoulder> { backStack ->
+                val args = backStack.toRoute<AddBoulder>()
+                AddBoulder(
+                    onOpenSession = { id ->
+                        nav.navigate(SessionDetail(id)) {
+                            popUpTo<AddSession> {
+                                inclusive = true
+                            }
+                        }
+                    },
+                    sessionId = args.sessionId
                 )
             }
         }

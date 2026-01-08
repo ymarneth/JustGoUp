@@ -20,6 +20,7 @@ import org.clc.justgoup.ui.theme.components.BoulderButton
 
 @Composable
 fun SessionDetailScreen(
+    onAddBoulder: (String) -> Unit,
     sessionId: String,
 ) {
     val repository = provideClimbingSessionRepository()
@@ -35,15 +36,12 @@ fun SessionDetailScreen(
             )
         ) {
             item {
-                SessionHeader(
-                    session = session,
-                    onEndSession = { viewModel.endClimbingSession(sessionId) }
-                )
+                SessionHeader(session = session)
             }
             item {
                 BoulderButton(
                     text = "+ Add Boulder",
-                    onClick = { viewModel.addBoulderToSession(sessionId) }
+                    onClick = { onAddBoulder(sessionId) }
                 )
             }
             items(session.boulders) { boulder ->
