@@ -7,7 +7,6 @@ data class ClimbingSession(
     val id: String,
     val location: String,
     val startTime: LocalDateTime,
-    val endTime: LocalDateTime?,
     val notes: String? = null,
     val boulders: List<Boulder> = emptyList()
 ) {

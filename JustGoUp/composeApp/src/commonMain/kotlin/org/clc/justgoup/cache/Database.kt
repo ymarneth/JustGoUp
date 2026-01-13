@@ -15,8 +15,7 @@ internal class Database(
     private val database = JustGoUpDatabase(
         driver = databaseDriverFactory.createDriver(),
         climbing_sessionAdapter = Climbing_session.Adapter(
-            startTimeAdapter = LocalDateTimeAdapter,
-            endTimeAdapter = LocalDateTimeAdapter
+            startTimeAdapter = LocalDateTimeAdapter
         )
     )
 
@@ -28,7 +27,6 @@ internal class Database(
                 queries.findSessionsWithBoulders { sessionId,
                                                    sessionLocation,
                                                    sessionStartTime,
-                                                   sessionEndTime,
                                                    sessionNotes,
                                                    boulderId,
                                                    boulderGradeType,
@@ -42,7 +40,6 @@ internal class Database(
                         sessionId,
                         sessionLocation,
                         sessionStartTime,
-                        sessionEndTime,
                         sessionNotes,
                         boulderId,
                         boulderGradeType,
@@ -65,7 +62,6 @@ internal class Database(
                 queries.findSessionWithBouldersById(sessionId) { sessionId,
                                                                  sessionLocation,
                                                                  sessionStartTime,
-                                                                 sessionEndTime,
                                                                  sessionNotes,
                                                                  boulderId,
                                                                  boulderGradeType,
@@ -79,7 +75,6 @@ internal class Database(
                         sessionId,
                         sessionLocation,
                         sessionStartTime,
-                        sessionEndTime,
                         sessionNotes,
                         boulderId,
                         boulderGradeType,
@@ -98,14 +93,12 @@ internal class Database(
         id: String,
         location: String,
         startTime: LocalDateTime,
-        endTime: LocalDateTime?,
         notes: String?
     ) = withContext(Dispatchers.IO) {
         queries.insertSession(
             id = id,
             location = location,
             startTime = startTime,
-            endTime = endTime,
             notes = notes
         )
     }
@@ -114,13 +107,11 @@ internal class Database(
         session: ClimbingSession,
         location: String? = null,
         startTime: LocalDateTime? = null,
-        endTime: LocalDateTime? = null,
         notes: String? = null
     ) = withContext(Dispatchers.IO) {
         queries.updateSession(
             location = location ?: session.location,
             startTime = startTime ?: session.startTime,
-            endTime = endTime ?: session.endTime,
             notes = notes ?: session.notes,
             id = session.id
         )
@@ -161,7 +152,6 @@ internal class Database(
                     id = row.sessionId,
                     location = row.location,
                     startTime = row.startTime,
-                    endTime = row.endTime,
                     notes = row.notes,
                     boulders = mutableListOf()
                 )
@@ -189,7 +179,6 @@ internal class Database(
         sessionId: String,
         sessionLocation: String,
         sessionStartTime: LocalDateTime,
-        sessionEndTime: LocalDateTime?,
         sessionNotes: String?,
         boulderId: String?,
         boulderGradeType: String?,
@@ -203,7 +192,6 @@ internal class Database(
         sessionId = sessionId,
         location = sessionLocation,
         startTime = sessionStartTime,
-        endTime = sessionEndTime,
         notes = sessionNotes,
         boulderId = boulderId,
         gradeType = boulderGradeType,
@@ -220,7 +208,6 @@ private data class SessionWithBoulderRow(
     val sessionId: String,
     val location: String,
     val startTime: LocalDateTime,
-    val endTime: LocalDateTime?,
     val notes: String?,
     val boulderId: String?,
     val gradeType: String?,

@@ -1,17 +1,23 @@
 package org.clc.justgoup.climbingSession
 
 import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 import org.clc.justgoup.boulder.Boulder
 import org.clc.justgoup.boulder.HoldColor
 import org.clc.justgoup.cache.Database
+import kotlin.time.Clock
+import kotlin.time.ExperimentalTime
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 
 
 interface ClimbingSessionRepository {
     suspend fun findRecentSessions(): List<RecentClimbingSession>
-    suspend fun getSessionById(sessionId: String): ClimbingSession?
-    suspend fun startSession(session: ClimbingSession)
-    suspend fun updateSession(command: ClimbingSessionUpdateCommand)
-    suspend fun addBoulderToSession(sessionId: String, boulder: Boulder)
+    suspend fun getSessionById(id: String): ClimbingSession?
+    suspend fun startSession(command: StartClimbingSessionCommand): ClimbingSession
+    suspend fun updateSession(id: String, command: ClimbingSessionUpdateCommand)
+    suspend fun addBoulderToSession(id: String, boulder: Boulder)
 }
 
 internal class ClimbingSessionRepositoryImpl(
@@ -25,35 +31,47 @@ internal class ClimbingSessionRepositoryImpl(
             .map { it.toRecent() }
     }
 
-    override suspend fun getSessionById(sessionId: String): ClimbingSession? =
-        database.findSessionWithBouldersById(sessionId)
+    override suspend fun getSessionById(id: String): ClimbingSession? =
+        database.findSessionWithBouldersById(id)
 
-    override suspend fun startSession(session: ClimbingSession) {
+    @OptIn(ExperimentalUuidApi::class, ExperimentalTime::class)
+    override suspend fun startSession(command: StartClimbingSessionCommand): ClimbingSession {
+        val sessionId = Uuid.random().toString()
+        val now = Clock.System.now().toLocalDateTime(TimeZone.UTC)
+
+        val session = ClimbingSession(
+            id = sessionId,
+            location = command.location,
+            startTime = now,
+            notes = command.notes
+        )
+
         database.insertSession(
             id = session.id,
             location = session.location,
             startTime = session.startTime,
-            endTime = session.endTime,
             notes = session.notes
         )
+
+        return getSessionById(sessionId)
+            ?: throw IllegalStateException("Session $sessionId was inserted but not found")
     }
 
-    override suspend fun updateSession(command: ClimbingSessionUpdateCommand) {
-        val session = getSessionById(command.id) ?: return
+    override suspend fun updateSession(id: String, command: ClimbingSessionUpdateCommand) {
+        val session = getSessionById(id) ?: return
 
         database.updateSession(
             session = session,
             location = command.location,
             startTime = command.startTime,
-            endTime = command.endTime,
             notes = command.notes
         )
     }
 
-    override suspend fun addBoulderToSession(sessionId: String, boulder: Boulder) {
+    override suspend fun addBoulderToSession(id: String, boulder: Boulder) {
         database.insertBoulder(
             id = boulder.id,
-            sessionId = sessionId,
+            sessionId = id,
             grade = boulder.grade,
             attempts = boulder.attempts,
             sent = boulder.sent,
@@ -64,10 +82,13 @@ internal class ClimbingSessionRepositoryImpl(
     }
 }
 
+data class StartClimbingSessionCommand(
+    val location: String,
+    val notes: String?
+)
+
 data class ClimbingSessionUpdateCommand(
-    val id: String,
     val location: String? = null,
     val startTime: LocalDateTime? = null,
-    val endTime: LocalDateTime? = null,
     val notes: String? = null
 )
