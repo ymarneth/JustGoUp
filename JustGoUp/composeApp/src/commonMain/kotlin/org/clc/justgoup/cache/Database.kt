@@ -115,17 +115,18 @@ internal class Database(
     }
 
     internal suspend fun updateSession(
-        session: ClimbingSession,
-        location: String? = null,
-        startTime: LocalDateTime? = null,
-        notes: String? = null
+        updatedSession: ClimbingSession
     ) = withContext(Dispatchers.IO) {
         queries.updateSession(
-            location = location ?: session.location,
-            startTime = startTime ?: session.startTime,
-            notes = notes ?: session.notes,
-            id = session.id
+            location = updatedSession.location,
+            startTime = updatedSession.startTime,
+            notes = updatedSession.notes,
+            id = updatedSession.id
         )
+    }
+
+    internal suspend fun deleteSession(sessionId: String) = withContext(Dispatchers.IO) {
+        queries.deleteSessionById(sessionId)
     }
 
     @OptIn(ExperimentalTime::class)
@@ -144,6 +145,46 @@ internal class Database(
             notes = boulder.notes,
             createdAt = boulder.createdAt
         )
+    }
+
+    internal suspend fun findBoulderById(boulderId: String): Boulder? =
+        withContext(Dispatchers.IO) {
+            queries.findBoulderById(boulderId) { id, _, gradeType, gradeValue,
+                                                 attempts, sent, flash, repeated,
+                                                 color, notes, createdAt ->
+                Boulder(
+                    id = id,
+                    grade = GradeAdapter.decode(gradeType, gradeValue),
+                    attempts = attempts.toInt(),
+                    sent = sent != 0L,
+                    flash = flash != 0L,
+                    repeated = repeated != 0L,
+                    color = color?.let(HoldColor::valueOf),
+                    notes = notes,
+                    createdAt = createdAt
+                )
+            }.executeAsOneOrNull()
+        }
+
+    internal suspend fun updateBoulder(
+        boulder: Boulder
+    ) = withContext(Dispatchers.IO) {
+        val (type, value) = GradeAdapter.encode(boulder.grade)
+        queries.updateBoulder(
+            id = boulder.id,
+            gradeType = type,
+            gradeValue = value,
+            attempts = boulder.attempts.toLong(),
+            sent = if (boulder.sent) 1L else 0L,
+            flash = if (boulder.flash) 1L else 0L,
+            repeated = if (boulder.repeated) 1L else 0L,
+            color = boulder.color?.name,
+            notes = boulder.notes
+        )
+    }
+
+    internal suspend fun deleteBoulder(boulderId: String) = withContext(Dispatchers.IO) {
+        queries.deleteBoulderById(boulderId)
     }
 
     private fun mapSessionsWithBoulders(

@@ -12,7 +12,10 @@ interface ClimbingSessionRepository {
     suspend fun getSessionById(id: String): ClimbingSession?
     suspend fun startSession(command: StartClimbingSessionCommand): ClimbingSession
     suspend fun updateSession(id: String, command: ClimbingSessionUpdateCommand)
+    suspend fun deleteSession(id: String)
     suspend fun addBoulderToSession(sessionId: String, command: CreateBoulderCommand)
+    suspend fun updateBoulderInSession(boulderId: String, command: UpdateBoulderCommand)
+    suspend fun deleteBoulderFromSession(boulderId: String)
 }
 
 internal class ClimbingSessionRepositoryImpl(
@@ -49,12 +52,17 @@ internal class ClimbingSessionRepositoryImpl(
     override suspend fun updateSession(id: String, command: ClimbingSessionUpdateCommand) {
         val session = getSessionById(id) ?: return
 
-        database.updateSession(
-            session = session,
-            location = command.location,
-            startTime = command.startTime,
-            notes = command.notes
+        val updatedSession = session.copy(
+            location = command.location ?: session.location,
+            startTime = command.startTime ?: session.startTime,
+            notes = command.notes ?: session.notes
         )
+
+        database.updateSession(updatedSession)
+    }
+
+    override suspend fun deleteSession(id: String) {
+        database.deleteSession(id)
     }
 
     override suspend fun addBoulderToSession(sessionId: String, command: CreateBoulderCommand) {
@@ -69,6 +77,26 @@ internal class ClimbingSessionRepositoryImpl(
 
         database.insertBoulder(sessionId, boulder)
     }
+
+    override suspend fun updateBoulderInSession(boulderId: String, command: UpdateBoulderCommand) {
+        val boulder = database.findBoulderById(boulderId) ?: return
+
+        val updatedBoulder = boulder.copy(
+            grade = command.grade ?: boulder.grade,
+            attempts = command.attempts ?: boulder.attempts,
+            sent = command.sent ?: boulder.sent,
+            flash = command.flash ?: boulder.flash,
+            repeated = command.repeated ?: boulder.repeated,
+            color = command.color ?: boulder.color,
+            notes = command.notes ?: boulder.notes
+        )
+
+        database.updateBoulder(updatedBoulder)
+    }
+
+    override suspend fun deleteBoulderFromSession(boulderId: String) {
+        database.deleteBoulder(boulderId)
+    }
 }
 
 data class StartClimbingSessionCommand(
@@ -77,9 +105,9 @@ data class StartClimbingSessionCommand(
 )
 
 data class ClimbingSessionUpdateCommand(
-    val location: String? = null,
-    val startTime: LocalDateTime? = null,
-    val notes: String? = null
+    val location: String?,
+    val startTime: LocalDateTime?,
+    val notes: String?
 )
 
 data class CreateBoulderCommand(
@@ -87,6 +115,17 @@ data class CreateBoulderCommand(
     val attempts: Int,
     val sent: Boolean,
     val flash: Boolean = false,
+    val repeated: Boolean = false,
     val color: HoldColor? = null,
     val notes: String? = null,
+)
+
+data class UpdateBoulderCommand(
+    val grade: Grade?,
+    val attempts: Int?,
+    val sent: Boolean?,
+    val flash: Boolean?,
+    val repeated: Boolean?,
+    val color: HoldColor?,
+    val notes: String?,
 )

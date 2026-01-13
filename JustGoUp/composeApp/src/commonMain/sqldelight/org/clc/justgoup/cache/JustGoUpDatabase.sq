@@ -21,7 +21,7 @@ CREATE TABLE boulder (
   notes         TEXT,
   createdAt     TEXT AS LocalDateTime NOT NULL,
   CONSTRAINT pk_boulder PRIMARY KEY(id),
-  FOREIGN KEY(sessionId) REFERENCES climbing_session(id)
+  FOREIGN KEY(sessionId) REFERENCES climbing_session(id) ON DELETE CASCADE
 );
 
 -- QUERIES
@@ -83,9 +83,35 @@ SET
   notes = :notes
 WHERE id = :id;
 
+deleteSessionById:
+DELETE FROM climbing_session
+WHERE id = ?;
+
 insertBoulder:
 INSERT INTO boulder(
   id, sessionId, gradeType, gradeValue,
   attempts, sent, flash, repeated, color, notes, createdAt
 )
 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+
+findBoulderById:
+SELECT *
+FROM boulder
+WHERE id = ?;
+
+updateBoulder:
+UPDATE boulder
+SET
+    gradeType  = :gradeType,
+    gradeValue = :gradeValue,
+    attempts   = :attempts,
+    sent       = :sent,
+    flash      = :flash,
+    repeated   = :repeated,
+    color      = :color,
+    notes      = :notes
+WHERE id = :id;
+
+deleteBoulderById:
+DELETE FROM boulder
+WHERE id = ?;
