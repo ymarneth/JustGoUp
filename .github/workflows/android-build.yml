@@ -48,6 +48,7 @@ jobs:
       - name: Build Android Release
         run: |
           cd ${{ inputs.project-dir }}
+          chmod +x gradlew
           ./gradlew assembleRelease
 
       - name: Upload APK artifact
