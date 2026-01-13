@@ -14,6 +14,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import org.clc.justgoup.di.provideClimbingSessionRepository
+import org.clc.justgoup.ui.theme.BoulderTheme
 import org.clc.justgoup.ui.theme.components.BoulderButton
 import org.clc.justgoup.ui.theme.components.BoulderTextField
 
@@ -30,15 +31,17 @@ fun AddSession(
     val text = locationState.text
     val isValid = text.length >= minLength
 
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
+    Column {
+        Text(
+            text = "Start Session",
+            style = BoulderTheme.typography.titleMedium,
+            color = BoulderTheme.colors.textPrimary
+        )
+
+        Spacer(Modifier.height(BoulderTheme.spacing.medium.dp))
+
         BoulderTextField(
-            modifier = Modifier
-                .fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth(),
             state = locationState,
             placeholder = "Location",
             maxLength = 50,
@@ -47,6 +50,8 @@ fun AddSession(
 
         // Error message
         if (!isValid && text.isNotEmpty()) {
+            Spacer(Modifier.height(BoulderTheme.spacing.small.dp))
+
             Text(
                 text = "Minimum $minLength characters",
                 color = MaterialTheme.colorScheme.error,
@@ -54,11 +59,12 @@ fun AddSession(
             )
         }
 
-        Spacer(modifier = Modifier.height(16.dp)) // Extra spacing before button
+        Spacer(Modifier.height(BoulderTheme.spacing.medium.dp))
 
         BoulderButton(
             text = "Start Session",
             enabled = isValid,
+            modifier = Modifier.fillMaxWidth(),
             onClick = {
                 viewModel.startSession(
                     locationInput = text.toString(),

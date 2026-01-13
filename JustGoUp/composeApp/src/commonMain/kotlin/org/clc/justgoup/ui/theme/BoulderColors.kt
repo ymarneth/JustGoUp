@@ -15,25 +15,31 @@ data class BoulderColors(
 )
 
 val BoulderLightColors = BoulderColors(
-    primary = Color(0xFF33BFA6),      // Teal hold
-    secondary = Color(0xFFFD8A43),    // Orange hold
-    background = Color(0xFFF9F7F4),   // Soft chalk white
-    surface = Color(0xFFFFFFFF),      // Paper white
+    primary = Color(0xFF8EDBD1),
+    secondary = Color(0xFF6B6B6B),
+
+    background = Color(0xFFF2EFEA),
+    surface    = Color(0xFFFFFBF6),
+
     textPrimary = Color(0xFF1D1D1D),
-    textSecondary = Color(0xFF5F5F5F),
-    success = Color(0xFF7CC46E),      // Flash / Send green
-    warning = Color(0xFFFFD43B),      // Slippery yellow hold
-    error = Color(0xFFE15659),        // Fall red
+    textSecondary = Color(0xFF6A6A6A),
+
+    success = Color(0xFF4CAF50),
+    warning = Color(0xFFF2C94C),
+    error = Color(0xFFE65C5C),
 )
 
 val BoulderDarkColors = BoulderColors(
-    primary = Color(0xFF33BFA6),      // Same teal — still pops great on dark
-    secondary = Color(0xFFFD8A43),    // Orange stays vivid for accents
-    background = Color(0xFF121212),   // Standard dark background
-    surface = Color(0xFF1E1E1E),      // Slightly lighter surface, card backgrounds
-    textPrimary = Color(0xFFECECEC),  // Soft-white, avoids OLED glare
-    textSecondary = Color(0xFFB3B3B3), // Medium gray for secondary
-    success = Color(0xFF6BBF5E),      // Adjusted green for dark mode
-    warning = Color(0xFFFFC93A),      // Slightly warmer yellow
-    error = Color(0xFFE26A6D),        // Softened red for dark surfaces
+    primary = Color(0xFF2F5D62),
+    secondary = Color(0xFF9E9E9E),
+
+    background = Color(0xFF151A1E),
+    surface = Color(0xFF1D2328),
+
+    textPrimary = Color(0xFFF0F0F0),
+    textSecondary = Color(0xFFB0B0B0),
+
+    success = Color(0xFF66BB6A),
+    warning = Color(0xFFFFD54F),
+    error = Color(0xFFEF6C6C),
 )
