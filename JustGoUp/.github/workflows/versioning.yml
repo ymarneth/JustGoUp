@@ -1,0 +1,79 @@
+name: Semantic Versioning
+
+on:
+  workflow_call:
+    outputs:
+      version:
+        description: "New semantic version"
+        value: ${{ jobs.version.outputs.version }}
+      level:
+        description: "What was bumped (major/minor/patch)"
+        value: ${{ jobs.version.outputs.level }}
+
+jobs:
+  version:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    outputs:
+      version: ${{ steps.bump.outputs.version }}
+      level: ${{ steps.bump.outputs.level }}
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get latest tag
+        id: latest
+        run: |
+          git fetch --tags
+          TAG=$(git tag --sort=-v:refname | head -n 1)
+
+          if [ -z "$TAG" ]; then
+            TAG="0.0.0"
+          fi
+
+          echo "LATEST=$TAG" >> $GITHUB_ENV
+
+      - name: Get commit message
+        run: |
+          MSG=$(git log -1 --pretty=%B)
+          echo "MSG<<EOF" >> $GITHUB_ENV
+          echo "$MSG" >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
+
+      - name: Calculate next version
+        id: bump
+        run: |
+          IFS='.' read MAJOR MINOR PATCH <<< "$LATEST"
+
+          MAJOR=${MAJOR:-0}
+          MINOR=${MINOR:-0}
+          PATCH=${PATCH:-0}
+
+          if echo "$MSG" | grep -iq "\[major\]"; then
+            MAJOR=$((MAJOR + 1))
+            MINOR=0
+            PATCH=0
+            LEVEL="major"
+          elif echo "$MSG" | grep -iq "\[minor\]"; then
+            MINOR=$((MINOR + 1))
+            PATCH=0
+            LEVEL="minor"
+          else
+            PATCH=$((PATCH + 1))
+            LEVEL="patch"
+          fi
+
+          VERSION="$MAJOR.$MINOR.$PATCH"
+
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "level=$LEVEL" >> $GITHUB_OUTPUT
+
+      - name: Create Git tag
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git tag "${{ steps.bump.outputs.version }}"
+          git push origin "${{ steps.bump.outputs.version }}"
