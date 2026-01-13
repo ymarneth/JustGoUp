@@ -4,21 +4,18 @@ on:
   push:
     branches: [ "main" ]
   workflow_dispatch:
-  
+
 permissions:
   contents: write
 
 jobs:
   version:
     uses: ./.github/workflows/versioning.yml
-
-  build:
-    runs-on: ubuntu-latest
+          
+  build-android:
+    uses: ./.github/workflows/android-build.yml
     needs: version
+    with:
+      project-dir: "JustGoUp"
+      version: ${{ needs.version.outputs.version }}
 
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Show version
-        run: |
-          echo "Building version ${{ needs.version.outputs.version }}"
