@@ -71,6 +71,7 @@ internal class ClimbingSessionRepositoryImpl(
             attempts = command.attempts,
             sent = command.sent,
             flash = command.flash,
+            repeated = command.repeated,
             color = command.color,
             notes = command.notes,
         )

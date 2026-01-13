@@ -18,21 +18,23 @@ class AddBoulderViewModel(
         attempts: Int,
         sent: Boolean,
         flash: Boolean,
+        repeated: Boolean,
         color: HoldColor?,
         notes: String?,
         onBoulderAdded: (String) -> Unit
     ) {
-        val boulder = CreateBoulderCommand(
+        val command = CreateBoulderCommand(
             grade = grade,
             attempts = attempts,
             sent = sent,
             flash = flash,
+            repeated = repeated,
             color = color,
             notes = notes,
         )
 
         viewModelScope.launch {
-            climbingSessionRepository.addBoulderToSession(sessionId, boulder)
+            climbingSessionRepository.addBoulderToSession(sessionId, command)
         }
 
         onBoulderAdded(sessionId)

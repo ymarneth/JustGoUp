@@ -85,7 +85,7 @@ fun BoulderCard(
         }
 
         boulder.notes?.let { note ->
-            Spacer(Modifier.height(BoulderTheme.spacing.small.dp))
+            Spacer(Modifier.height(BoulderTheme.spacing.large.dp))
 
             Text(
                 text = note,

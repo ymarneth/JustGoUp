@@ -1,16 +1,16 @@
 package org.clc.justgoup.ui.home.addSession
 
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import org.clc.justgoup.di.provideClimbingSessionRepository
@@ -25,11 +25,10 @@ fun AddSession(
     val repository = provideClimbingSessionRepository()
     val viewModel = remember { AddSessionViewModel(repository) }
 
-    val locationState = rememberTextFieldState()
+    var location by remember { mutableStateOf("") }
 
     val minLength = 3
-    val text = locationState.text
-    val isValid = text.length >= minLength
+    val isValid = location.length >= minLength
 
     Column {
         Text(
@@ -42,14 +41,15 @@ fun AddSession(
 
         BoulderTextField(
             modifier = Modifier.fillMaxWidth(),
-            state = locationState,
+            value = location,
+            onValueChange = { location = it },
             placeholder = "Location",
             maxLength = 50,
-            isError = !isValid && text.isNotEmpty()
+            isError = !isValid && location.isNotEmpty()
         )
 
         // Error message
-        if (!isValid && text.isNotEmpty()) {
+        if (!isValid && location.isNotEmpty()) {
             Spacer(Modifier.height(BoulderTheme.spacing.small.dp))
 
             Text(
@@ -67,7 +67,7 @@ fun AddSession(
             modifier = Modifier.fillMaxWidth(),
             onClick = {
                 viewModel.startSession(
-                    locationInput = text.toString(),
+                    locationInput = location,
                     onSessionCreated = { newId -> onOpenSession(newId) }
                 )
             },

@@ -13,32 +13,30 @@ import org.clc.justgoup.ui.theme.BoulderTheme
 
 @Composable
 fun BoulderTextField(
-    state: TextFieldState,
+    value: String,
+    onValueChange: (String) -> Unit,
     placeholder: String,
     modifier: Modifier = Modifier,
     isError: Boolean = false,
     enabled: Boolean = true,
-    maxLength: Int? = null
+    maxLength: Int? = null,
+    minLines: Int = 1,
+    maxLines: Int = Int.MAX_VALUE,
+    singleLine: Boolean = false
 ) {
     val colors = BoulderTheme.colors
     val typography = BoulderTheme.typography
 
     TextField(
-        state = state,
+        value = value,
+        onValueChange = { onValueChange(it.take(maxLength ?: it.length)) },
         modifier = modifier,
         enabled = enabled,
-        lineLimits = TextFieldLineLimits.SingleLine,
-        placeholder = {
-            Text(
-                text = placeholder,
-                style = typography.body,
-                color = colors.textSecondary
-            )
-        },
+        singleLine = singleLine,
+        minLines = minLines,
+        maxLines = maxLines,
+        placeholder = { Text(placeholder, style = typography.body, color = colors.textSecondary) },
         textStyle = typography.body.copy(color = colors.textPrimary),
-        inputTransformation = maxLength?.let {
-            InputTransformation.maxLength(it)
-        },
         isError = isError,
         colors = TextFieldDefaults.colors(
             focusedContainerColor = colors.surface,

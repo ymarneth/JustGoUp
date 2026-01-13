@@ -8,15 +8,14 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -37,6 +36,9 @@ import org.clc.justgoup.boulder.toColor
 import org.clc.justgoup.di.provideClimbingSessionRepository
 import org.clc.justgoup.ui.theme.BoulderTheme
 import org.clc.justgoup.ui.theme.components.BoulderButton
+import org.clc.justgoup.ui.theme.components.BoulderTextField
+import org.clc.justgoup.ui.theme.components.ChipDivider
+import org.clc.justgoup.ui.theme.components.SelectableChip
 
 @Composable
 fun AddBoulder(
@@ -58,31 +60,51 @@ fun AddBoulder(
     var attempts by remember { mutableStateOf(1) }
     var sent by remember { mutableStateOf(false) }
     var flash by remember { mutableStateOf(false) }
+    var repeated by remember { mutableStateOf(false) }
     var color by remember { mutableStateOf<HoldColor?>(null) }
     var notes by remember { mutableStateOf("") }
 
-    Column(
-        modifier = Modifier.fillMaxWidth().verticalScroll(scrollState).padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(20.dp)
-    ) {
-
+    Column(modifier = Modifier.fillMaxWidth().verticalScroll(scrollState)) {
         Text(
             text = "Add Boulder",
             style = BoulderTheme.typography.titleMedium,
             color = BoulderTheme.colors.textPrimary
         )
 
-        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            FilterChip(
-                selected = gradingSystem == GradingSystem.FRENCH,
-                onClick = { gradingSystem = GradingSystem.FRENCH },
-                label = { Text("French") },
+        Spacer(Modifier.height(BoulderTheme.spacing.large.dp))
+
+        Text(
+            text = "Grade",
+            style = BoulderTheme.typography.body,
+            color = BoulderTheme.colors.textPrimary
+        )
+
+        Spacer(Modifier.height(BoulderTheme.spacing.small.dp))
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(42.dp)
+                .background(BoulderTheme.colors.surface)
+        ) {
+            SelectableChip(
+                label = "French",
+                value = GradingSystem.FRENCH,
+                selectedValue = gradingSystem,
+                onSelect = { gradingSystem = GradingSystem.FRENCH },
+                modifier = Modifier.weight(1f)
             )
-            FilterChip(
-                selected = gradingSystem == GradingSystem.V_SCALE,
-                onClick = { gradingSystem = GradingSystem.V_SCALE },
-                label = { Text("V-Scale") })
+            ChipDivider()
+            SelectableChip(
+                label = "V-Scale",
+                value = GradingSystem.V_SCALE,
+                selectedValue = gradingSystem,
+                onSelect = { gradingSystem = GradingSystem.V_SCALE },
+                modifier = Modifier.weight(1f)
+            )
         }
+
+        Spacer(Modifier.height(BoulderTheme.spacing.medium.dp))
 
         when (gradingSystem) {
             GradingSystem.FRENCH -> FrenchGradePicker(
@@ -99,14 +121,22 @@ fun AddBoulder(
                 beginner = vGradeBeginner,
                 onValueChange = { vGradeValue = it },
                 onPlusChange = { vGradePlus = it },
-                onBeginnerChange = { vGradeBeginner = it })
+                onBeginnerChange = {
+                    vGradeBeginner = it
+                    vGradeValue = 0
+                })
         }
+
+        Spacer(Modifier.height(BoulderTheme.spacing.large.dp))
 
         Text(
             text = "Attempts",
             style = BoulderTheme.typography.body,
             color = BoulderTheme.colors.textPrimary
         )
+
+        Spacer(Modifier.height(BoulderTheme.spacing.small.dp))
+
         AttemptsSelector(
             value = attempts,
             onChange = {
@@ -116,12 +146,26 @@ fun AddBoulder(
                 }
             })
 
+        Spacer(Modifier.height(BoulderTheme.spacing.large.dp))
+
+        Text(
+            text = "Modifier",
+            style = BoulderTheme.typography.body,
+            color = BoulderTheme.colors.textPrimary
+        )
+
+        Spacer(Modifier.height(BoulderTheme.spacing.small.dp))
+
         SentFlashChips(
             sent = sent,
             flash = flash,
+            repeated = repeated,
             attempts = attempts,
             onSentChange = { sent = it },
-            onFlashChange = { flash = it })
+            onFlashChange = { flash = it },
+            onRepeatedChange = { repeated = it })
+
+        Spacer(Modifier.height(BoulderTheme.spacing.large.dp))
 
         Text(
             text = "Hold Color",
@@ -129,18 +173,36 @@ fun AddBoulder(
             color = BoulderTheme.colors.textPrimary
         )
 
-        HoldColorPicker(
-            selected = color, onSelected = { color = it })
+        Spacer(Modifier.height(BoulderTheme.spacing.small.dp))
 
-        OutlinedTextField(
-            modifier = Modifier.fillMaxWidth(),
-            value = notes,
-            onValueChange = { notes = it },
-            label = { Text("Notes (optional)") },
-            minLines = 2
+        HoldColorPicker(
+            selected = color,
+            onSelected = { color = it }
         )
 
+        Spacer(Modifier.height(BoulderTheme.spacing.large.dp))
+
+        Text(
+            text = "Notes (optional)",
+            style = BoulderTheme.typography.body,
+            color = BoulderTheme.colors.textPrimary
+        )
+
+        Spacer(Modifier.height(BoulderTheme.spacing.small.dp))
+
+        BoulderTextField(
+            value = notes,
+            onValueChange = { notes = it },
+            placeholder = "Add thoughts about this boulder.",
+            minLines = 2,
+            maxLines = 6,
+            modifier = Modifier.fillMaxWidth(),
+        )
+
+        Spacer(Modifier.height(BoulderTheme.spacing.large.dp))
+
         BoulderButton(
+            modifier = Modifier.fillMaxWidth(),
             text = "Save Boulder", onClick = {
                 val grade = when (gradingSystem) {
                     GradingSystem.FRENCH -> Grade.French(
@@ -153,7 +215,9 @@ fun AddBoulder(
 
                     GradingSystem.V_SCALE -> Grade.VScale(
                         value = VGrade(
-                            value = vGradeValue
+                            value = vGradeValue,
+                            beginner = vGradeBeginner,
+                            plus = vGradePlus
                         )
                     )
                 }
@@ -163,23 +227,27 @@ fun AddBoulder(
                     attempts = attempts,
                     sent = sent,
                     flash = flash,
+                    repeated = repeated,
                     color = color,
                     notes = notes.ifBlank { null },
                     onBoulderAdded = onOpenSession
                 )
             })
+
+        Spacer(Modifier.height(BoulderTheme.spacing.extraLarge.dp))
     }
 }
 
 @Composable
 fun HoldColorPicker(
-    selected: HoldColor?, onSelected: (HoldColor?) -> Unit
+    selected: HoldColor?,
+    onSelected: (HoldColor?) -> Unit
 ) {
     val colors = HoldColor.entries.toTypedArray()
 
     FlowRow(
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+        horizontalArrangement = Arrangement.spacedBy(BoulderTheme.spacing.small.dp),
+        verticalArrangement = Arrangement.spacedBy(BoulderTheme.spacing.small.dp)
     ) {
         colors.forEach { color ->
             val isSelected = selected == color
@@ -202,7 +270,7 @@ fun AttemptsSelector(
 ) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(16.dp)
+        horizontalArrangement = Arrangement.spacedBy(BoulderTheme.spacing.medium.dp)
     ) {
         BoulderButton(
             text = "-",
@@ -228,21 +296,37 @@ fun AttemptsSelector(
 fun SentFlashChips(
     sent: Boolean,
     flash: Boolean,
+    repeated: Boolean,
     attempts: Int,
     onSentChange: (Boolean) -> Unit,
-    onFlashChange: (Boolean) -> Unit
+    onFlashChange: (Boolean) -> Unit,
+    onRepeatedChange: (Boolean) -> Unit
 ) {
     Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-        FilterChip(selected = sent, onClick = {
-            onSentChange(!sent)
-            if (sent) onFlashChange(false)
-        }, label = { Text(text = "Send", color = BoulderTheme.colors.textPrimary) })
+        SelectableChip(
+            label = "Send",
+            value = true,
+            selectedValue = sent,
+            onSelect = {
+                onSentChange(!sent)
+                if (sent) onFlashChange(false)
+            }
+        )
 
-        FilterChip(
-            selected = flash,
+        SelectableChip(
+            label = "Flash ⚡",
+            value = true,
+            selectedValue = flash,
             enabled = sent && attempts == 1,
-            onClick = { onFlashChange(!flash) },
-            label = { Text(text = "Flash ⚡", color = BoulderTheme.colors.textPrimary) })
+            onSelect = { onFlashChange(!flash) }
+        )
+
+        SelectableChip(
+            label = "Repeated",
+            value = true,
+            selectedValue = repeated,
+            onSelect = { onRepeatedChange(!repeated) },
+        )
     }
 }
 
@@ -255,32 +339,42 @@ fun FrenchGradePicker(
     onLetterChange: (Char?) -> Unit,
     onPlusChange: (Boolean) -> Unit
 ) {
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-
+    Column {
         FlowRow(
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+            horizontalArrangement = Arrangement.spacedBy(BoulderTheme.spacing.small.dp),
+            verticalArrangement = Arrangement.spacedBy(BoulderTheme.spacing.small.dp)
         ) {
-            (3..9).forEach {
-                FilterChip(
-                    selected = number == it,
-                    onClick = { onNumberChange(it) },
-                    label = { Text(it.toString()) })
+            (3..9).forEach { it ->
+                SelectableChip(
+                    label = it.toString(),
+                    value = it,
+                    selectedValue = number,
+                    onSelect = { onNumberChange(it) }
+                )
             }
         }
 
+        Spacer(Modifier.height(BoulderTheme.spacing.medium.dp))
+
         FlowRow(
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+            horizontalArrangement = Arrangement.spacedBy(BoulderTheme.spacing.small.dp),
+            verticalArrangement = Arrangement.spacedBy(BoulderTheme.spacing.small.dp)
         ) {
-            listOf('a', 'b', 'c').forEach {
-                FilterChip(
-                    selected = letter == it,
-                    onClick = { onLetterChange(it) },
-                    label = { Text(it.toString()) })
+            listOf('a', 'b', 'c').forEach { it ->
+                SelectableChip(
+                    label = it.toString(),
+                    value = it,
+                    selectedValue = letter,
+                    onSelect = { onLetterChange(it) }
+                )
             }
 
-            FilterChip(selected = plus, onClick = { onPlusChange(!plus) }, label = { Text("+") })
+            SelectableChip(
+                label = "+",
+                value = true,
+                selectedValue = plus,
+                onSelect = { onPlusChange(!plus) }
+            )
         }
     }
 }
@@ -294,31 +388,46 @@ fun VScalePicker(
     onPlusChange: (Boolean) -> Unit,
     onBeginnerChange: (Boolean) -> Unit
 ) {
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    Column {
+        FlowRow(
+            horizontalArrangement = Arrangement.spacedBy(BoulderTheme.spacing.small.dp),
+            verticalArrangement = Arrangement.spacedBy(BoulderTheme.spacing.small.dp)
+        ) {
+            SelectableChip(
+                label = "VB",
+                value = true,
+                selectedValue = beginner,
+                onSelect = { onBeginnerChange(!beginner) }
+            )
+        }
 
-        // VB toggle
-        FilterChip(
-            selected = beginner,
-            onClick = { onBeginnerChange(!beginner) },
-            label = { Text("VB") })
+        Spacer(Modifier.height(BoulderTheme.spacing.medium.dp))
 
         FlowRow(
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+            horizontalArrangement = Arrangement.spacedBy(BoulderTheme.spacing.small.dp),
+            verticalArrangement = Arrangement.spacedBy(BoulderTheme.spacing.small.dp)
         ) {
-            (0..17).forEach { v ->
-                FilterChip(selected = !beginner && value == v, onClick = {
-                    onValueChange(v)
-                    onBeginnerChange(false) // deselect VB
-                }, label = { Text("V$v") })
+            (0..10).forEach { v ->
+                SelectableChip(
+                    label = "V$v",
+                    value = v,
+                    selectedValue = if (beginner) -1 else value,
+                    onSelect = {
+                        onValueChange(v)
+                        onBeginnerChange(false) // deselect VB
+                    }
+                )
             }
         }
 
-        // Plus toggle
-        FilterChip(
-            selected = plus,
-            onClick = { onPlusChange(!plus) },
+        Spacer(Modifier.height(BoulderTheme.spacing.medium.dp))
+
+        SelectableChip(
+            label = "+",
+            value = true,
+            selectedValue = plus && !beginner,
             enabled = !beginner,
-            label = { Text("+") })
+            onSelect = { onPlusChange(!plus) }
+        )
     }
 }
