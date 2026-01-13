@@ -14,8 +14,9 @@ data class Boulder(
     val id: String = Uuid.random().toString(),
     val grade: Grade,
     val attempts: Int,
-    val sent: Boolean,
+    val sent: Boolean = false,
     val flash: Boolean = false,
+    val repeated: Boolean = false,
     val color: HoldColor? = null,
     val notes: String? = null,
     val createdAt: LocalDateTime = Clock.System.now().toLocalDateTime(TimeZone.UTC)

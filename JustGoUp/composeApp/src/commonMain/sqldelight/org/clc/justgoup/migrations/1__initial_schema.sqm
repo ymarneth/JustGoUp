@@ -16,6 +16,7 @@ CREATE TABLE boulder (
   attempts      INTEGER             NOT NULL,
   sent          INTEGER             NOT NULL,
   flash         INTEGER             NOT NULL,
+  repeated      INTEGER             NOT NULL,
   color         TEXT,
   notes         TEXT,
   createdAt     TEXT AS LocalDateTime NOT NULL,

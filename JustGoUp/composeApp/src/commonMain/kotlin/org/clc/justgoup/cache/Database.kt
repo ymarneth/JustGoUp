@@ -1,12 +1,10 @@
 package org.clc.justgoup.cache
 
-import androidx.compose.ui.text.font.FontVariation.grade
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.LocalDateTime
 import org.clc.justgoup.boulder.Boulder
-import org.clc.justgoup.boulder.Grade
 import org.clc.justgoup.boulder.HoldColor
 import org.clc.justgoup.climbingSession.ClimbingSession
 import kotlin.time.ExperimentalTime
@@ -39,6 +37,7 @@ internal class Database(
                                                    boulderAttempts,
                                                    boulderSent,
                                                    boulderFlash,
+                                                   boulderRepeated,
                                                    boulderColor,
                                                    boulderNotes,
                                                    boulderCreatedAt ->
@@ -53,6 +52,7 @@ internal class Database(
                         boulderAttempts,
                         boulderSent,
                         boulderFlash,
+                        boulderRepeated,
                         boulderColor,
                         boulderNotes,
                         boulderCreatedAt
@@ -76,6 +76,7 @@ internal class Database(
                                                                  boulderAttempts,
                                                                  boulderSent,
                                                                  boulderFlash,
+                                                                 boulderRepeated,
                                                                  boulderColor,
                                                                  boulderNotes,
                                                                  boulderCreatedAt ->
@@ -90,6 +91,7 @@ internal class Database(
                         boulderAttempts,
                         boulderSent,
                         boulderFlash,
+                        boulderRepeated,
                         boulderColor,
                         boulderNotes,
                         boulderCreatedAt
@@ -137,6 +139,7 @@ internal class Database(
             attempts = boulder.attempts.toLong(),
             sent = if (boulder.sent) 1L else 0L,
             flash = if (boulder.flash) 1L else 0L,
+            repeated = if (boulder.repeated) 1L else 0L,
             color = boulder.color?.name,
             notes = boulder.notes,
             createdAt = boulder.createdAt
@@ -167,6 +170,7 @@ internal class Database(
                         attempts = row.attempts!!.toInt(),
                         sent = row.sent != 0L,
                         flash = row.flash != 0L,
+                        repeated = row.repeated != 0L,
                         color = row.color?.let(HoldColor::valueOf),
                         notes = row.boulderNotes,
                         createdAt = row.boulderCreatedAt!!
@@ -189,6 +193,7 @@ internal class Database(
         boulderAttempts: Long?,
         boulderSent: Long?,
         boulderFlash: Long?,
+        boulderRepeated: Long?,
         boulderColor: String?,
         boulderNotes: String?,
         boulderCreatedAt: LocalDateTime?
@@ -203,6 +208,7 @@ internal class Database(
         attempts = boulderAttempts,
         sent = boulderSent,
         flash = boulderFlash,
+        repeated = boulderRepeated,
         color = boulderColor,
         boulderNotes = boulderNotes,
         boulderCreatedAt = boulderCreatedAt
@@ -220,6 +226,7 @@ private data class SessionWithBoulderRow(
     val attempts: Long?,
     val sent: Long?,
     val flash: Long?,
+    val repeated: Long?,
     val color: String?,
     val boulderNotes: String?,
     val boulderCreatedAt: LocalDateTime?

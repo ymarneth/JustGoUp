@@ -16,6 +16,7 @@ CREATE TABLE boulder (
   attempts      INTEGER             NOT NULL,
   sent          INTEGER             NOT NULL,
   flash         INTEGER             NOT NULL,
+  repeated      INTEGER             NOT NULL,
   color         TEXT,
   notes         TEXT,
   createdAt     TEXT AS LocalDateTime NOT NULL,
@@ -37,6 +38,7 @@ SELECT
     boulder.attempts               AS boulder_attempts,
     boulder.sent                   AS boulder_sent,
     boulder.flash                  AS boulder_flash,
+    boulder.repeated               AS boulder_repeated,
     boulder.color                  AS boulder_color,
     boulder.notes                  AS boulder_notes,
     boulder.createdAt              AS boulder_createdAt
@@ -59,6 +61,7 @@ SELECT
     boulder.attempts               AS boulder_attempts,
     boulder.sent                   AS boulder_sent,
     boulder.flash                  AS boulder_flash,
+    boulder.repeated               AS boulder_repeated,
     boulder.color                  AS boulder_color,
     boulder.notes                  AS boulder_notes,
     boulder.createdAt              AS boulder_createdAt
@@ -83,6 +86,6 @@ WHERE id = :id;
 insertBoulder:
 INSERT INTO boulder(
   id, sessionId, gradeType, gradeValue,
-  attempts, sent, flash, color, notes, createdAt
+  attempts, sent, flash, repeated, color, notes, createdAt
 )
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
