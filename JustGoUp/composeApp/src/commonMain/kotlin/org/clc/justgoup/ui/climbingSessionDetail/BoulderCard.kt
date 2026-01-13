@@ -34,7 +34,7 @@ fun BoulderCard(
         modifier = modifier
             .background(
                 color = cardColor,
-                shape = RoundedCornerShape(8.dp)
+                shape = RoundedCornerShape(4.dp)
             )
             .padding(BoulderTheme.spacing.medium.dp)
     ) {

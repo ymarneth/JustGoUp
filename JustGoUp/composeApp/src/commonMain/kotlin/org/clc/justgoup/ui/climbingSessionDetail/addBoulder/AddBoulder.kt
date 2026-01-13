@@ -121,10 +121,8 @@ fun AddBoulder(
                 beginner = vGradeBeginner,
                 onValueChange = { vGradeValue = it },
                 onPlusChange = { vGradePlus = it },
-                onBeginnerChange = {
-                    vGradeBeginner = it
-                    vGradeValue = 0
-                })
+                onBeginnerChange = { vGradeBeginner = it }
+            )
         }
 
         Spacer(Modifier.height(BoulderTheme.spacing.large.dp))
@@ -253,13 +251,17 @@ fun HoldColorPicker(
             val isSelected = selected == color
 
             Box(
-                modifier = Modifier.size(40.dp).clip(CircleShape).background(color.toColor())
+                modifier = Modifier
+                    .size(40.dp)
+                    .clip(CircleShape)
+                    .background(color.toColor())
                     .border(
                         width = if (isSelected) 3.dp else 1.dp,
                         color = if (isSelected) BoulderTheme.colors.primary
                         else BoulderTheme.colors.textSecondary,
                         shape = CircleShape
-                    ).clickable { onSelected(color) })
+                    )
+                    .clickable { onSelected(color) })
         }
     }
 }
@@ -414,7 +416,7 @@ fun VScalePicker(
                     selectedValue = if (beginner) -1 else value,
                     onSelect = {
                         onValueChange(v)
-                        onBeginnerChange(false) // deselect VB
+                        onBeginnerChange(false)
                     }
                 )
             }
