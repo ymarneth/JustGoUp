@@ -56,5 +56,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: JustGoUp-Android-${{ inputs.version }}-Release
-          path: ${{ inputs.project-dir }}/androidApp/build/outputs/apk/release/*.apk
+          path: ${{ inputs.project-dir }}/build/outputs/apk/release/composeApp-release.apk
 
