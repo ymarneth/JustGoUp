@@ -1,0 +1,21 @@
+name: Release new version
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+jobs:
+  version:
+    uses: ./.github/workflows/versioning.yml
+
+  build:
+    runs-on: ubuntu-latest
+    needs: version
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Show version
+        run: |
+          echo "Building version ${{ needs.version.outputs.version }}"
