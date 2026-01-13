@@ -18,6 +18,7 @@ CREATE TABLE boulder (
   flash         INTEGER             NOT NULL,
   color         TEXT,
   notes         TEXT,
+  createdAt     TEXT AS LocalDateTime NOT NULL,
   CONSTRAINT pk_boulder PRIMARY KEY(id),
   FOREIGN KEY(sessionId) REFERENCES climbing_session(id)
 );

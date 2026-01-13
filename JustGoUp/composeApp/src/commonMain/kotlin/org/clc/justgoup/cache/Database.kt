@@ -1,5 +1,6 @@
 package org.clc.justgoup.cache
 
+import androidx.compose.ui.text.font.FontVariation.grade
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.withContext
@@ -8,6 +9,7 @@ import org.clc.justgoup.boulder.Boulder
 import org.clc.justgoup.boulder.Grade
 import org.clc.justgoup.boulder.HoldColor
 import org.clc.justgoup.climbingSession.ClimbingSession
+import kotlin.time.ExperimentalTime
 
 internal class Database(
     databaseDriverFactory: DatabaseDriverFactory
@@ -16,13 +18,16 @@ internal class Database(
         driver = databaseDriverFactory.createDriver(),
         climbing_sessionAdapter = Climbing_session.Adapter(
             startTimeAdapter = LocalDateTimeAdapter
+        ),
+        boulderAdapter = org.clc.justgoup.cache.Boulder.Adapter(
+            createdAtAdapter = LocalDateTimeAdapter
         )
     )
 
     private val queries = database.justGoUpDatabaseQueries
 
     internal suspend fun findAllSessions(): List<ClimbingSession> =
-        withContext(kotlinx.coroutines.Dispatchers.IO) {
+        withContext(Dispatchers.IO) {
             mapSessionsWithBoulders(
                 queries.findSessionsWithBoulders { sessionId,
                                                    sessionLocation,
@@ -35,7 +40,8 @@ internal class Database(
                                                    boulderSent,
                                                    boulderFlash,
                                                    boulderColor,
-                                                   boulderNotes ->
+                                                   boulderNotes,
+                                                   boulderCreatedAt ->
                     row(
                         sessionId,
                         sessionLocation,
@@ -48,7 +54,8 @@ internal class Database(
                         boulderSent,
                         boulderFlash,
                         boulderColor,
-                        boulderNotes
+                        boulderNotes,
+                        boulderCreatedAt
                     )
                 }.executeAsList()
             )
@@ -70,7 +77,8 @@ internal class Database(
                                                                  boulderSent,
                                                                  boulderFlash,
                                                                  boulderColor,
-                                                                 boulderNotes ->
+                                                                 boulderNotes,
+                                                                 boulderCreatedAt ->
                     row(
                         sessionId,
                         sessionLocation,
@@ -83,7 +91,8 @@ internal class Database(
                         boulderSent,
                         boulderFlash,
                         boulderColor,
-                        boulderNotes
+                        boulderNotes,
+                        boulderCreatedAt
                     )
                 }.executeAsList()
             ).firstOrNull()
@@ -117,27 +126,20 @@ internal class Database(
         )
     }
 
-    internal suspend fun insertBoulder(
-        id: String,
-        sessionId: String,
-        grade: Grade,
-        attempts: Int,
-        sent: Boolean,
-        flash: Boolean,
-        color: HoldColor,
-        notes: String?
-    ) = withContext(Dispatchers.IO) {
-        val (type, value) = GradeAdapter.encode(grade)
+    @OptIn(ExperimentalTime::class)
+    internal suspend fun insertBoulder(sessionId: String, boulder: Boulder) = withContext(Dispatchers.IO) {
+        val (type, value) = GradeAdapter.encode(boulder.grade)
         queries.insertBoulder(
-            id = id,
+            id = boulder.id,
             sessionId = sessionId,
             gradeType = type,
             gradeValue = value,
-            attempts = attempts.toLong(),
-            sent = if (sent) 1L else 0L,
-            flash = if (flash) 1L else 0L,
-            color = color.name,
-            notes = notes
+            attempts = boulder.attempts.toLong(),
+            sent = if (boulder.sent) 1L else 0L,
+            flash = if (boulder.flash) 1L else 0L,
+            color = boulder.color?.name,
+            notes = boulder.notes,
+            createdAt = boulder.createdAt
         )
     }
 
@@ -166,7 +168,8 @@ internal class Database(
                         sent = row.sent != 0L,
                         flash = row.flash != 0L,
                         color = row.color?.let(HoldColor::valueOf),
-                        notes = row.boulderNotes
+                        notes = row.boulderNotes,
+                        createdAt = row.boulderCreatedAt!!
                     )
                 )
             }
@@ -187,7 +190,8 @@ internal class Database(
         boulderSent: Long?,
         boulderFlash: Long?,
         boulderColor: String?,
-        boulderNotes: String?
+        boulderNotes: String?,
+        boulderCreatedAt: LocalDateTime?
     ) = SessionWithBoulderRow(
         sessionId = sessionId,
         location = sessionLocation,
@@ -200,7 +204,8 @@ internal class Database(
         sent = boulderSent,
         flash = boulderFlash,
         color = boulderColor,
-        boulderNotes = boulderNotes
+        boulderNotes = boulderNotes,
+        boulderCreatedAt = boulderCreatedAt
     )
 }
 
@@ -216,5 +221,6 @@ private data class SessionWithBoulderRow(
     val sent: Long?,
     val flash: Long?,
     val color: String?,
-    val boulderNotes: String?
+    val boulderNotes: String?,
+    val boulderCreatedAt: LocalDateTime?
 )

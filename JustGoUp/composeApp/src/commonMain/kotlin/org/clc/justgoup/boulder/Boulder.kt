@@ -1,15 +1,24 @@
 package org.clc.justgoup.boulder
 
 import androidx.compose.ui.graphics.Color
+import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
+import kotlin.time.Clock
+import kotlin.time.ExperimentalTime
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 
+@OptIn(ExperimentalTime::class, ExperimentalUuidApi::class)
 data class Boulder(
-    val id: String,
+    val id: String = Uuid.random().toString(),
     val grade: Grade,
     val attempts: Int,
     val sent: Boolean,
     val flash: Boolean = false,
     val color: HoldColor? = null,
-    val notes: String? = null
+    val notes: String? = null,
+    val createdAt: LocalDateTime = Clock.System.now().toLocalDateTime(TimeZone.UTC)
 )
 
 enum class GradingSystem { FRENCH, V_SCALE }

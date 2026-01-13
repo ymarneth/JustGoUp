@@ -18,6 +18,7 @@ CREATE TABLE boulder (
   flash         INTEGER             NOT NULL,
   color         TEXT,
   notes         TEXT,
+  createdAt     TEXT AS LocalDateTime NOT NULL,
   CONSTRAINT pk_boulder PRIMARY KEY(id),
   FOREIGN KEY(sessionId) REFERENCES climbing_session(id)
 );
@@ -37,11 +38,13 @@ SELECT
     boulder.sent                   AS boulder_sent,
     boulder.flash                  AS boulder_flash,
     boulder.color                  AS boulder_color,
-    boulder.notes                  AS boulder_notes
+    boulder.notes                  AS boulder_notes,
+    boulder.createdAt              AS boulder_createdAt
 FROM climbing_session
 LEFT JOIN boulder
     ON boulder.sessionId = climbing_session.id
-ORDER BY climbing_session.startTime DESC;
+ORDER BY climbing_session.startTime DESC,
+         boulder.createdAt DESC;
 
 findSessionWithBouldersById:
 SELECT
@@ -57,11 +60,13 @@ SELECT
     boulder.sent                   AS boulder_sent,
     boulder.flash                  AS boulder_flash,
     boulder.color                  AS boulder_color,
-    boulder.notes                  AS boulder_notes
+    boulder.notes                  AS boulder_notes,
+    boulder.createdAt              AS boulder_createdAt
 FROM climbing_session
 LEFT JOIN boulder
     ON boulder.sessionId = climbing_session.id
-WHERE climbing_session.id = ?;
+WHERE climbing_session.id = ?
+ORDER BY boulder.createdAt DESC;
 
 insertSession:
 INSERT INTO climbing_session(id, location, startTime, notes)
@@ -76,5 +81,8 @@ SET
 WHERE id = :id;
 
 insertBoulder:
-INSERT INTO boulder(id, sessionId, gradeType, gradeValue, attempts, sent, flash, color, notes)
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);
+INSERT INTO boulder(
+  id, sessionId, gradeType, gradeValue,
+  attempts, sent, flash, color, notes, createdAt
+)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
