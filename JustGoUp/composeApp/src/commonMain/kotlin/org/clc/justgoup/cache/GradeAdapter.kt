@@ -74,6 +74,10 @@ object GradeAdapter {
 
         val (number, letter, modifier) = match.destructured
 
+        require(number.toInt() in 3..9) {
+            "French grade must be between 3 and 9"
+        }
+
         return FrenchGrade(
             number = number.toInt(),
             letter = letter.takeIf { it.isNotEmpty() }?.first(),

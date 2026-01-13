@@ -30,16 +30,15 @@ fun BoulderButton(
         else BoulderTheme.colors.textPrimary.copy(alpha = 0.6f)
 
     Box(
+        contentAlignment = Alignment.Center,
         modifier = modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(12.dp))
+            .clip(RoundedCornerShape(4.dp))
             .background(backgroundColor)
+            .padding(vertical = 8.dp, horizontal = 16.dp)
             .clickable(
                 enabled = enabled,
                 onClick = onClick
             )
-            .padding(16.dp),
-        contentAlignment = Alignment.Center
     ) {
         Text(
             text = text,

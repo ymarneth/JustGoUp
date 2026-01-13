@@ -4,7 +4,6 @@ CREATE TABLE climbing_session (
   id            TEXT                    NOT NULL,
   location      TEXT                    NOT NULL,
   startTime     TEXT AS LocalDateTime   NOT NULL,
-  endTime       TEXT AS LocalDateTime,
   notes         TEXT,
   CONSTRAINT pk_climbing_session PRIMARY KEY(id)
 );
@@ -17,10 +16,12 @@ CREATE TABLE boulder (
   attempts      INTEGER             NOT NULL,
   sent          INTEGER             NOT NULL,
   flash         INTEGER             NOT NULL,
+  repeated      INTEGER             NOT NULL,
   color         TEXT,
   notes         TEXT,
+  createdAt     TEXT AS LocalDateTime NOT NULL,
   CONSTRAINT pk_boulder PRIMARY KEY(id),
-  FOREIGN KEY(sessionId) REFERENCES climbing_session(id)
+  FOREIGN KEY(sessionId) REFERENCES climbing_session(id) ON DELETE CASCADE
 );
 
 -- QUERIES
@@ -29,7 +30,6 @@ SELECT
     climbing_session.id            AS session_id,
     climbing_session.location      AS session_location,
     climbing_session.startTime     AS session_startTime,
-    climbing_session.endTime       AS session_endTime,
     climbing_session.notes         AS session_notes,
 
     boulder.id                     AS boulder_id,
@@ -38,19 +38,21 @@ SELECT
     boulder.attempts               AS boulder_attempts,
     boulder.sent                   AS boulder_sent,
     boulder.flash                  AS boulder_flash,
+    boulder.repeated               AS boulder_repeated,
     boulder.color                  AS boulder_color,
-    boulder.notes                  AS boulder_notes
+    boulder.notes                  AS boulder_notes,
+    boulder.createdAt              AS boulder_createdAt
 FROM climbing_session
 LEFT JOIN boulder
     ON boulder.sessionId = climbing_session.id
-ORDER BY climbing_session.startTime DESC;
+ORDER BY climbing_session.startTime DESC,
+         boulder.createdAt DESC;
 
 findSessionWithBouldersById:
 SELECT
     climbing_session.id            AS session_id,
     climbing_session.location      AS session_location,
     climbing_session.startTime     AS session_startTime,
-    climbing_session.endTime       AS session_endTime,
     climbing_session.notes         AS session_notes,
 
     boulder.id                     AS boulder_id,
@@ -59,26 +61,57 @@ SELECT
     boulder.attempts               AS boulder_attempts,
     boulder.sent                   AS boulder_sent,
     boulder.flash                  AS boulder_flash,
+    boulder.repeated               AS boulder_repeated,
     boulder.color                  AS boulder_color,
-    boulder.notes                  AS boulder_notes
+    boulder.notes                  AS boulder_notes,
+    boulder.createdAt              AS boulder_createdAt
 FROM climbing_session
 LEFT JOIN boulder
     ON boulder.sessionId = climbing_session.id
-WHERE climbing_session.id = ?;
+WHERE climbing_session.id = ?
+ORDER BY boulder.createdAt DESC;
 
 insertSession:
-INSERT INTO climbing_session(id, location, startTime, endTime, notes)
-VALUES (?, ?, ?, ?, ?);
+INSERT INTO climbing_session(id, location, startTime, notes)
+VALUES (?, ?, ?, ?);
 
 updateSession:
 UPDATE climbing_session
 SET
   location = :location,
   startTime = :startTime,
-  endTime = :endTime,
   notes = :notes
 WHERE id = :id;
 
+deleteSessionById:
+DELETE FROM climbing_session
+WHERE id = ?;
+
 insertBoulder:
-INSERT INTO boulder(id, sessionId, gradeType, gradeValue, attempts, sent, flash, color, notes)
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);
+INSERT INTO boulder(
+  id, sessionId, gradeType, gradeValue,
+  attempts, sent, flash, repeated, color, notes, createdAt
+)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+
+findBoulderById:
+SELECT *
+FROM boulder
+WHERE id = ?;
+
+updateBoulder:
+UPDATE boulder
+SET
+    gradeType  = :gradeType,
+    gradeValue = :gradeValue,
+    attempts   = :attempts,
+    sent       = :sent,
+    flash      = :flash,
+    repeated   = :repeated,
+    color      = :color,
+    notes      = :notes
+WHERE id = :id;
+
+deleteBoulderById:
+DELETE FROM boulder
+WHERE id = ?;

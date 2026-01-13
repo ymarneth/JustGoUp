@@ -2,6 +2,7 @@ package org.clc.justgoup.ui.climbingSessionDetail
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -11,55 +12,83 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.unit.dp
 import org.clc.justgoup.boulder.Boulder
-import org.clc.justgoup.boulder.HoldColor
+import org.clc.justgoup.boulder.toColor
 import org.clc.justgoup.boulder.toDisplayString
+import org.clc.justgoup.ui.helpers.asShortDateTime
 import org.clc.justgoup.ui.theme.BoulderTheme
-import org.clc.justgoup.ui.theme.components.GradeChip
 
 @Composable
-fun BoulderCard(boulder: Boulder) {
+fun BoulderCard(
+    boulder: Boulder,
+    modifier: Modifier = Modifier
+) {
+    val cardColor = boulder.color?.toColor()?.copy(alpha = 0.1f) ?: BoulderTheme.colors.surface
+
     Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(16.dp))
-            .background(BoulderTheme.colors.surface)
-            .padding(16.dp)
+        modifier = modifier
+            .background(
+                color = cardColor,
+                shape = RoundedCornerShape(8.dp)
+            )
+            .padding(BoulderTheme.spacing.medium.dp)
     ) {
-        GradeChip(
-            grade = boulder.grade.toDisplayString(),
-            color = (boulder.color?.toColor() ?: Color.Gray)
-        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            GradeChip(
+                grade = boulder.grade.toDisplayString(),
+                color = boulder.color?.toColor() ?: BoulderTheme.colors.surface.copy(alpha = 0.2f)
+            )
+
+            val statusParts = mutableListOf<String>()
+            if (boulder.flash) statusParts.add("FLASH")
+            else if (boulder.sent) statusParts.add("SEND")
+            if (boulder.repeated) statusParts.add("REPEATED")
+
+            val statusText = statusParts.joinToString(" • ")
+
+            if (statusText.isNotEmpty()) {
+                Text(
+                    text = statusText,
+                    color = BoulderTheme.colors.textPrimary,
+                    style = BoulderTheme.typography.titleMedium
+                )
+            }
+        }
 
         Spacer(Modifier.height(BoulderTheme.spacing.small.dp))
 
         Row(
             horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.Bottom,
             modifier = Modifier.fillMaxWidth()
         ) {
             Text(
-                "Attempts: ${boulder.attempts}",
-                color = BoulderTheme.colors.textPrimary,
-                style = BoulderTheme.typography.body
+                text = "Attempts: ${boulder.attempts}",
+                style = BoulderTheme.typography.body,
+                color = BoulderTheme.colors.textPrimary
             )
 
-            if (boulder.sent) {
-                Text(
-                    text = if (boulder.flash) "FLASH" else "SEND",
-                    style = BoulderTheme.typography.body,
-                    color = BoulderTheme.colors.success
-                )
-            }
+            Text(
+                text = boulder.createdAt.asShortDateTime(),
+                style = BoulderTheme.typography.label,
+                color = BoulderTheme.colors.textSecondary
+            )
         }
 
-        if (boulder.notes != null) {
-            Spacer(Modifier.height(8.dp))
+        boulder.notes?.let { note ->
+            Spacer(Modifier.height(BoulderTheme.spacing.large.dp))
+
             Text(
-                text = boulder.notes,
+                text = note,
                 style = BoulderTheme.typography.body,
                 color = BoulderTheme.colors.textSecondary
             )
@@ -67,16 +96,23 @@ fun BoulderCard(boulder: Boulder) {
     }
 }
 
-fun HoldColor.toColor(): Color = when (this) {
-    HoldColor.RED -> Color(0xFFE53935)
-    HoldColor.PINK -> Color(0xFFF06292)
-    HoldColor.BLUE -> Color(0xFF1E88E5)
-    HoldColor.GREEN -> Color(0xFF43A047)
-    HoldColor.TEAL -> Color(0xFF009688)
-    HoldColor.YELLOW -> Color(0xFFFDD835)
-    HoldColor.ORANGE -> Color(0xFFFB8C00)
-    HoldColor.PURPLE -> Color(0xFF8E24AA)
-    HoldColor.BLACK -> Color(0xFF212121)
-    HoldColor.WHITE -> Color(0xFFFAFAFA)
-    HoldColor.GREY -> Color(0xFF9E9E9E)
+@Composable
+fun GradeChip(
+    grade: String,
+    color: Color,
+    modifier: Modifier = Modifier
+) {
+    val textColor = if (color.luminance() < 0.5f) Color.White else Color.Black
+
+    Box(
+        modifier = modifier
+            .background(color, RoundedCornerShape(4.dp))
+            .padding(horizontal = 12.dp, vertical = 4.dp)
+    ) {
+        Text(
+            text = grade,
+            style = BoulderTheme.typography.titleMedium,
+            color = textColor
+        )
+    }
 }

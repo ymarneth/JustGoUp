@@ -5,9 +5,9 @@ import kotlinx.coroutines.IO
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.LocalDateTime
 import org.clc.justgoup.boulder.Boulder
-import org.clc.justgoup.boulder.Grade
 import org.clc.justgoup.boulder.HoldColor
 import org.clc.justgoup.climbingSession.ClimbingSession
+import kotlin.time.ExperimentalTime
 
 internal class Database(
     databaseDriverFactory: DatabaseDriverFactory
@@ -15,20 +15,21 @@ internal class Database(
     private val database = JustGoUpDatabase(
         driver = databaseDriverFactory.createDriver(),
         climbing_sessionAdapter = Climbing_session.Adapter(
-            startTimeAdapter = LocalDateTimeAdapter,
-            endTimeAdapter = LocalDateTimeAdapter
+            startTimeAdapter = LocalDateTimeAdapter
+        ),
+        boulderAdapter = org.clc.justgoup.cache.Boulder.Adapter(
+            createdAtAdapter = LocalDateTimeAdapter
         )
     )
 
     private val queries = database.justGoUpDatabaseQueries
 
     internal suspend fun findAllSessions(): List<ClimbingSession> =
-        withContext(kotlinx.coroutines.Dispatchers.IO) {
+        withContext(Dispatchers.IO) {
             mapSessionsWithBoulders(
                 queries.findSessionsWithBoulders { sessionId,
                                                    sessionLocation,
                                                    sessionStartTime,
-                                                   sessionEndTime,
                                                    sessionNotes,
                                                    boulderId,
                                                    boulderGradeType,
@@ -36,13 +37,14 @@ internal class Database(
                                                    boulderAttempts,
                                                    boulderSent,
                                                    boulderFlash,
+                                                   boulderRepeated,
                                                    boulderColor,
-                                                   boulderNotes ->
+                                                   boulderNotes,
+                                                   boulderCreatedAt ->
                     row(
                         sessionId,
                         sessionLocation,
                         sessionStartTime,
-                        sessionEndTime,
                         sessionNotes,
                         boulderId,
                         boulderGradeType,
@@ -50,8 +52,10 @@ internal class Database(
                         boulderAttempts,
                         boulderSent,
                         boulderFlash,
+                        boulderRepeated,
                         boulderColor,
-                        boulderNotes
+                        boulderNotes,
+                        boulderCreatedAt
                     )
                 }.executeAsList()
             )
@@ -65,7 +69,6 @@ internal class Database(
                 queries.findSessionWithBouldersById(sessionId) { sessionId,
                                                                  sessionLocation,
                                                                  sessionStartTime,
-                                                                 sessionEndTime,
                                                                  sessionNotes,
                                                                  boulderId,
                                                                  boulderGradeType,
@@ -73,13 +76,14 @@ internal class Database(
                                                                  boulderAttempts,
                                                                  boulderSent,
                                                                  boulderFlash,
+                                                                 boulderRepeated,
                                                                  boulderColor,
-                                                                 boulderNotes ->
+                                                                 boulderNotes,
+                                                                 boulderCreatedAt ->
                     row(
                         sessionId,
                         sessionLocation,
                         sessionStartTime,
-                        sessionEndTime,
                         sessionNotes,
                         boulderId,
                         boulderGradeType,
@@ -87,8 +91,10 @@ internal class Database(
                         boulderAttempts,
                         boulderSent,
                         boulderFlash,
+                        boulderRepeated,
                         boulderColor,
-                        boulderNotes
+                        boulderNotes,
+                        boulderCreatedAt
                     )
                 }.executeAsList()
             ).firstOrNull()
@@ -98,56 +104,87 @@ internal class Database(
         id: String,
         location: String,
         startTime: LocalDateTime,
-        endTime: LocalDateTime?,
         notes: String?
     ) = withContext(Dispatchers.IO) {
         queries.insertSession(
             id = id,
             location = location,
             startTime = startTime,
-            endTime = endTime,
             notes = notes
         )
     }
 
     internal suspend fun updateSession(
-        session: ClimbingSession,
-        location: String? = null,
-        startTime: LocalDateTime? = null,
-        endTime: LocalDateTime? = null,
-        notes: String? = null
+        updatedSession: ClimbingSession
     ) = withContext(Dispatchers.IO) {
         queries.updateSession(
-            location = location ?: session.location,
-            startTime = startTime ?: session.startTime,
-            endTime = endTime ?: session.endTime,
-            notes = notes ?: session.notes,
-            id = session.id
+            location = updatedSession.location,
+            startTime = updatedSession.startTime,
+            notes = updatedSession.notes,
+            id = updatedSession.id
         )
     }
 
-    internal suspend fun insertBoulder(
-        id: String,
-        sessionId: String,
-        grade: Grade,
-        attempts: Int,
-        sent: Boolean,
-        flash: Boolean,
-        color: HoldColor,
-        notes: String?
-    ) = withContext(Dispatchers.IO) {
-        val (type, value) = GradeAdapter.encode(grade)
+    internal suspend fun deleteSession(sessionId: String) = withContext(Dispatchers.IO) {
+        queries.deleteSessionById(sessionId)
+    }
+
+    @OptIn(ExperimentalTime::class)
+    internal suspend fun insertBoulder(sessionId: String, boulder: Boulder) = withContext(Dispatchers.IO) {
+        val (type, value) = GradeAdapter.encode(boulder.grade)
         queries.insertBoulder(
-            id = id,
+            id = boulder.id,
             sessionId = sessionId,
             gradeType = type,
             gradeValue = value,
-            attempts = attempts.toLong(),
-            sent = if (sent) 1L else 0L,
-            flash = if (flash) 1L else 0L,
-            color = color.name,
-            notes = notes
+            attempts = boulder.attempts.toLong(),
+            sent = if (boulder.sent) 1L else 0L,
+            flash = if (boulder.flash) 1L else 0L,
+            repeated = if (boulder.repeated) 1L else 0L,
+            color = boulder.color?.name,
+            notes = boulder.notes,
+            createdAt = boulder.createdAt
         )
+    }
+
+    internal suspend fun findBoulderById(boulderId: String): Boulder? =
+        withContext(Dispatchers.IO) {
+            queries.findBoulderById(boulderId) { id, _, gradeType, gradeValue,
+                                                 attempts, sent, flash, repeated,
+                                                 color, notes, createdAt ->
+                Boulder(
+                    id = id,
+                    grade = GradeAdapter.decode(gradeType, gradeValue),
+                    attempts = attempts.toInt(),
+                    sent = sent != 0L,
+                    flash = flash != 0L,
+                    repeated = repeated != 0L,
+                    color = color?.let(HoldColor::valueOf),
+                    notes = notes,
+                    createdAt = createdAt
+                )
+            }.executeAsOneOrNull()
+        }
+
+    internal suspend fun updateBoulder(
+        boulder: Boulder
+    ) = withContext(Dispatchers.IO) {
+        val (type, value) = GradeAdapter.encode(boulder.grade)
+        queries.updateBoulder(
+            id = boulder.id,
+            gradeType = type,
+            gradeValue = value,
+            attempts = boulder.attempts.toLong(),
+            sent = if (boulder.sent) 1L else 0L,
+            flash = if (boulder.flash) 1L else 0L,
+            repeated = if (boulder.repeated) 1L else 0L,
+            color = boulder.color?.name,
+            notes = boulder.notes
+        )
+    }
+
+    internal suspend fun deleteBoulder(boulderId: String) = withContext(Dispatchers.IO) {
+        queries.deleteBoulderById(boulderId)
     }
 
     private fun mapSessionsWithBoulders(
@@ -161,7 +198,6 @@ internal class Database(
                     id = row.sessionId,
                     location = row.location,
                     startTime = row.startTime,
-                    endTime = row.endTime,
                     notes = row.notes,
                     boulders = mutableListOf()
                 )
@@ -175,8 +211,10 @@ internal class Database(
                         attempts = row.attempts!!.toInt(),
                         sent = row.sent != 0L,
                         flash = row.flash != 0L,
+                        repeated = row.repeated != 0L,
                         color = row.color?.let(HoldColor::valueOf),
-                        notes = row.boulderNotes
+                        notes = row.boulderNotes,
+                        createdAt = row.boulderCreatedAt!!
                     )
                 )
             }
@@ -189,7 +227,6 @@ internal class Database(
         sessionId: String,
         sessionLocation: String,
         sessionStartTime: LocalDateTime,
-        sessionEndTime: LocalDateTime?,
         sessionNotes: String?,
         boulderId: String?,
         boulderGradeType: String?,
@@ -197,13 +234,14 @@ internal class Database(
         boulderAttempts: Long?,
         boulderSent: Long?,
         boulderFlash: Long?,
+        boulderRepeated: Long?,
         boulderColor: String?,
-        boulderNotes: String?
+        boulderNotes: String?,
+        boulderCreatedAt: LocalDateTime?
     ) = SessionWithBoulderRow(
         sessionId = sessionId,
         location = sessionLocation,
         startTime = sessionStartTime,
-        endTime = sessionEndTime,
         notes = sessionNotes,
         boulderId = boulderId,
         gradeType = boulderGradeType,
@@ -211,8 +249,10 @@ internal class Database(
         attempts = boulderAttempts,
         sent = boulderSent,
         flash = boulderFlash,
+        repeated = boulderRepeated,
         color = boulderColor,
-        boulderNotes = boulderNotes
+        boulderNotes = boulderNotes,
+        boulderCreatedAt = boulderCreatedAt
     )
 }
 
@@ -220,7 +260,6 @@ private data class SessionWithBoulderRow(
     val sessionId: String,
     val location: String,
     val startTime: LocalDateTime,
-    val endTime: LocalDateTime?,
     val notes: String?,
     val boulderId: String?,
     val gradeType: String?,
@@ -228,6 +267,8 @@ private data class SessionWithBoulderRow(
     val attempts: Long?,
     val sent: Long?,
     val flash: Long?,
+    val repeated: Long?,
     val color: String?,
-    val boulderNotes: String?
+    val boulderNotes: String?,
+    val boulderCreatedAt: LocalDateTime?
 )
