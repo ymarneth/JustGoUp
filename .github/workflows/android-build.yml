@@ -59,6 +59,10 @@ jobs:
             ~/.gradle/wrapper
           key: gradle-${{ hashFiles('${{ inputs.project-dir }}/gradle/wrapper/gradle-wrapper.properties') }}
           restore-keys: gradle-
+          
+      - name: Verify keystore 
+        run: |
+          keytool -list -keystore ${{ runner.temp }}/debug.keystore -storepass android
 
       - name: Build Android Release
         run: |
