@@ -7,7 +7,7 @@ on:
         required: true
         type: string
       version:
-        required: false
+        required: true
         type: string
 
 jobs:
@@ -16,10 +16,11 @@ jobs:
     permissions:
       contents: read
     outputs:
-      apk-path: ${{ steps.upload.outputs.artifact-path }}
+      apk-path: ${{ steps.set-output.outputs.artifact-path }}
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
@@ -27,10 +28,28 @@ jobs:
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: 21
+          java-version: 17
 
       - name: Set up Android SDK
         uses: android-actions/setup-android@v2
+
+      - name: Compute versionCode from version
+        id: versioning
+        run: |
+          IFS='.' read -r major minor patch <<< "${{ inputs.version }}"
+          VERSION_CODE=$((major * 10000 + minor * 100 + patch))
+          echo "VERSION_CODE=$VERSION_CODE" >> $GITHUB_ENV
+          echo "VERSION_NAME=${{ inputs.version }}" >> $GITHUB_ENV
+          echo "VERSION_CODE=$VERSION_CODE" >> $GITHUB_OUTPUT
+          echo "VERSION_NAME=${{ inputs.version }}" >> $GITHUB_OUTPUT
+
+      - name: Restore signing key
+        run: |
+          echo "${{ secrets.ANDROID_KEYSTORE_B64 }}" | base64 -d > ${{ runner.temp }}/debug.keystore
+          echo "ANDROID_KEYSTORE_PATH=${{ runner.temp }}/debug.keystore" >> $GITHUB_ENV
+          echo "ANDROID_KEYSTORE_PASSWORD=${{ secrets.ANDROID_KEYSTORE_PASSWORD }}" >> $GITHUB_ENV
+          echo "ANDROID_KEY_ALIAS=${{ secrets.ANDROID_KEY_ALIAS }}" >> $GITHUB_ENV
+          echo "ANDROID_KEY_PASSWORD=${{ secrets.ANDROID_KEY_PASSWORD }}" >> $GITHUB_ENV
 
       - name: Cache Gradle
         uses: actions/cache@v3
@@ -46,11 +65,13 @@ jobs:
           cd ${{ inputs.project-dir }}
           chmod +x ../gradlew
           ../gradlew assembleRelease
-          
+
       - name: Rename APK with version
         run: |
           cd ${{ inputs.project-dir }}/build/outputs/apk/release
-          mv composeApp-release-unsigned.apk composeApp-release-${{ inputs.version }}.apk
+          for f in composeApp-release*.apk; do
+            mv "$f" "composeApp-release-${{ inputs.version }}.apk"
+          done
 
       - name: Upload APK artifact
         id: upload
@@ -58,4 +79,9 @@ jobs:
         with:
           name: JustGoUp-Android-${{ inputs.version }}-Release
           path: ${{ inputs.project-dir }}/build/outputs/apk/release/composeApp-release-${{ inputs.version }}.apk
+
+      - name: Set output
+        id: set-output
+        run: |
+          echo "artifact-path=${{ inputs.project-dir }}/build/outputs/apk/release/composeApp-release-${{ inputs.version }}.apk" >> $GITHUB_OUTPUT
 
