@@ -18,4 +18,6 @@ jobs:
     with:
       project-dir: "JustGoUp/composeApp"
       version: ${{ needs.version.outputs.version }}
+    secrets:
+      ANDROID_KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_B64 }}
 
