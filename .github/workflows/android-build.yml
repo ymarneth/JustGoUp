@@ -12,6 +12,12 @@ on:
     secrets:
       ANDROID_KEYSTORE_B64:
         required: true
+      ANDROID_KEYSTORE_PASSWORD:
+        required: true
+      ANDROID_KEY_ALIAS:
+        required: true
+      ANDROID_KEY_PASSWORD:
+        required: true
 
 jobs:
   build-android:
@@ -62,10 +68,6 @@ jobs:
             ~/.gradle/wrapper
           key: gradle-${{ hashFiles('${{ inputs.project-dir }}/gradle/wrapper/gradle-wrapper.properties') }}
           restore-keys: gradle-
-          
-      - name: Verify keystore 
-        run: |
-          keytool -list -keystore ${{ runner.temp }}/debug.keystore -storepass android
 
       - name: Build Android Release
         run: |
