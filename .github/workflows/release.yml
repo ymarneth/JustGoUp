@@ -33,7 +33,7 @@ jobs:
       - name: Download APK artifact
         uses: actions/download-artifact@v4
         with:
-          name: JustGoUp-Android-${{ needs.version.outputs.version }}-Release
+          release_name: JustGoUp-Android-${{ needs.version.outputs.version }}-Release
           path: ./apk
 
       - name: Create GitHub release
@@ -57,4 +57,3 @@ jobs:
           asset_content_type: application/vnd.android.package-archive
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
