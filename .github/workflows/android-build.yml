@@ -9,6 +9,9 @@ on:
       version:
         required: true
         type: string
+    secrets:
+      ANDROID_KEYSTORE_B64:
+        required: true
 
 jobs:
   build-android:
