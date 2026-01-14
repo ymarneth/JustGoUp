@@ -50,11 +50,16 @@ jobs:
           cd ${{ inputs.project-dir }}
           chmod +x gradlew
           ./gradlew assembleRelease
+          
+      - name: Rename APK with version
+        run: |
+          cd ${{ inputs.project-dir }}/build/outputs/apk/release
+          mv composeApp-release-unsigned.apk composeApp-release-${{ inputs.version }}.apk
 
       - name: Upload APK artifact
         id: upload
         uses: actions/upload-artifact@v4
         with:
           name: JustGoUp-Android-${{ inputs.version }}-Release
-          path: ${{ inputs.project-dir }}/build/outputs/apk/release/composeApp-release.apk
+          path: ${{ inputs.project-dir }}/build/outputs/apk/release/composeApp-release-${{ inputs.version }}.apk
 
