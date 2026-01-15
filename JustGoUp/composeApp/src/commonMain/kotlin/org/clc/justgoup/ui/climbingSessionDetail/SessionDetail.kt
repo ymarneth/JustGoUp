@@ -1,7 +1,6 @@
 package org.clc.justgoup.ui.climbingSessionDetail
 
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -31,19 +30,16 @@ import kotlin.math.abs
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.awaitHorizontalTouchSlopOrCancellation
 import androidx.compose.foundation.gestures.drag
-import androidx.compose.foundation.gestures.forEachGesture
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateMapOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.compose.runtime.toMutableStateList
-import androidx.compose.ui.input.pointer.changedToUp
 import androidx.compose.ui.input.pointer.positionChange
 
 @Composable
@@ -96,7 +92,7 @@ fun SessionDetailScreen(
                             }
                         )
                     } else {
-                        SwipeToDeleteItem(
+                        SwipeItem(
                             onSwipe = { pendingDelete[boulder.id] = true }
                         ) {
                             BoulderCard(
@@ -119,7 +115,7 @@ fun SessionDetailScreen(
 }
 
 @Composable
-fun SwipeToDeleteItem(
+fun SwipeItem(
     onSwipe: () -> Unit,
     content: @Composable () -> Unit
 ) {
@@ -129,50 +125,46 @@ fun SwipeToDeleteItem(
 
     Box(
         modifier = Modifier.pointerInput(Unit) {
-            forEachGesture {
-                awaitPointerEventScope {
-                    val down = awaitFirstDown()
-                    var dragAmountX = 0f
+            awaitEachGesture {
+                val down = awaitFirstDown()
+                var dragAmountX = 0f
 
-                    // Wait to see if this is a horizontal swipe
-                    val drag = awaitHorizontalTouchSlopOrCancellation(down.id) { change, over ->
-                        dragAmountX += over
+                // Wait until its certain that it's a horizontal drag
+                val drag = awaitHorizontalTouchSlopOrCancellation(down.id) { change, over ->
+                    dragAmountX += over
+                    change.consume()
+
+                    scope.launch {
+                        offsetX.snapTo(dragAmountX)
+                    }
+                }
+
+                if (drag != null) {
+                    drag(drag.id) { change ->
+                        val delta = change.positionChange().x
+                        dragAmountX += delta
                         change.consume()
 
-                        // Move the card while slop is being crossed
                         scope.launch {
                             offsetX.snapTo(dragAmountX)
                         }
                     }
 
-                    if (drag != null) {
-                        // We are now officially in horizontal swipe mode
-                        drag(drag.id) { change ->
-                            val delta = change.positionChange().x
-                            dragAmountX += delta
-                            change.consume()
-
-                            scope.launch {
-                                offsetX.snapTo(dragAmountX)
-                            }
-                        }
-
-                        // Gesture finished
-                        scope.launch {
-                            if (abs(dragAmountX) > threshold) {
-                                offsetX.animateTo(
-                                    targetValue = if (dragAmountX > 0) 1000f else -1000f,
-                                    animationSpec = tween(250)
-                                )
-                                onSwipe()
-                                offsetX.snapTo(0f)
-                            } else {
-                                offsetX.animateTo(0f, tween(200))
-                            }
+                    // Gesture finished
+                    scope.launch {
+                        if (abs(dragAmountX) > threshold) {
+                            offsetX.animateTo(
+                                targetValue = if (dragAmountX > 0) 1000f else -1000f,
+                                animationSpec = tween(250)
+                            )
+                            onSwipe()
+                            offsetX.snapTo(0f)
+                        } else {
+                            offsetX.animateTo(0f, tween(200))
                         }
                     }
-                    // else: it was vertical → LazyColumn scrolls normally
                 }
+                // If drag == null → it was vertical, LazyColumn scrolls
             }
         }
     ) {
