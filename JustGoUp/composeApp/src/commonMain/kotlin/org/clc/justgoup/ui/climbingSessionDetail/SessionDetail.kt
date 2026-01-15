@@ -23,11 +23,17 @@ import org.clc.justgoup.di.provideClimbingSessionRepository
 import org.clc.justgoup.ui.theme.BoulderTheme
 import org.clc.justgoup.ui.theme.components.BoulderButton
 import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.toMutableStateList
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.Dp
 import org.clc.justgoup.ui.theme.components.SwipeItem
 
 @Composable
@@ -44,6 +50,7 @@ fun SessionDetailScreen(
     }
 
     val pendingDeleteId = remember { mutableStateOf<String?>(null) }
+    val density = LocalDensity.current
 
     session?.let {
         Column(modifier = Modifier.fillMaxSize()) {
@@ -69,9 +76,11 @@ fun SessionDetailScreen(
                     key = { b -> b.id }
                 ) { boulder ->
                     val isPending = pendingDeleteId.value == boulder.id
+                    val cardHeight = remember { mutableStateOf(0.dp) }
 
                     if (isPending) {
                         ConfirmationCard(
+                            height = cardHeight.value,
                             onCancel = { pendingDeleteId.value = null },
                             onConfirm = {
                                 pendingDeleteId.value = null
@@ -94,6 +103,9 @@ fun SessionDetailScreen(
                                             easing = FastOutSlowInEasing
                                         )
                                     )
+                                    .onGloballyPositioned { coordinates ->
+                                        cardHeight.value = with(density) { coordinates.size.height.toDp() }
+                                    }
                             )
                         }
                     }
@@ -107,17 +119,19 @@ fun SessionDetailScreen(
 fun ConfirmationCard(
     onCancel: () -> Unit,
     onConfirm: () -> Unit,
+    height: Dp = Dp.Unspecified,
     modifier: Modifier = Modifier
 ) {
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .padding(16.dp)
+            .widthIn(max = 400.dp)
+            .height(height)
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
+            modifier = Modifier.fillMaxSize()
         ) {
             Text(
                 text = "Delete this boulder?",
@@ -125,16 +139,21 @@ fun ConfirmationCard(
                 color = BoulderTheme.colors.textPrimary
             )
 
-            Row(horizontalArrangement = Arrangement.spacedBy(BoulderTheme.spacing.small.dp)) {
+            Spacer(modifier = Modifier.height(BoulderTheme.spacing.medium.dp))
+
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(BoulderTheme.spacing.small.dp),
+                modifier = Modifier.fillMaxWidth()
+            ) {
                 BoulderButton(
                     text = "Cancel",
                     onClick = onCancel,
-                    modifier = Modifier
+                    modifier = Modifier.weight(1f)
                 )
                 BoulderButton(
                     text = "Delete",
                     onClick = onConfirm,
-                    modifier = Modifier
+                    modifier = Modifier.weight(1f)
                 )
             }
         }
