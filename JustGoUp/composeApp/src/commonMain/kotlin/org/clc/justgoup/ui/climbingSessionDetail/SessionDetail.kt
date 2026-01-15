@@ -93,7 +93,8 @@ fun SessionDetailScreen(
                         )
                     } else {
                         SwipeItem(
-                            onSwipe = { pendingDelete[boulder.id] = true }
+                            onSwipeLeft = { pendingDelete[boulder.id] = true },
+                            onSwipeRight = { pendingDelete[boulder.id] = true }
                         ) {
                             BoulderCard(
                                 boulder = boulder,
@@ -116,7 +117,8 @@ fun SessionDetailScreen(
 
 @Composable
 fun SwipeItem(
-    onSwipe: () -> Unit,
+    onSwipeLeft: () -> Unit,
+    onSwipeRight: () -> Unit,
     content: @Composable () -> Unit
 ) {
     val offsetX = remember { Animatable(0f) }
@@ -129,7 +131,7 @@ fun SwipeItem(
                 val down = awaitFirstDown()
                 var dragAmountX = 0f
 
-                // Wait until its certain that it's a horizontal drag
+                // Wait until it is confirmed to be a horizontal drag
                 val drag = awaitHorizontalTouchSlopOrCancellation(down.id) { change, over ->
                     dragAmountX += over
                     change.consume()
@@ -153,11 +155,19 @@ fun SwipeItem(
                     // Gesture finished
                     scope.launch {
                         if (abs(dragAmountX) > threshold) {
+                            val isRight = dragAmountX > 0
+
                             offsetX.animateTo(
-                                targetValue = if (dragAmountX > 0) 1000f else -1000f,
+                                targetValue = if (isRight) 1000f else -1000f,
                                 animationSpec = tween(250)
                             )
-                            onSwipe()
+
+                            if (isRight) {
+                                onSwipeRight()
+                            } else {
+                                onSwipeLeft()
+                            }
+
                             offsetX.snapTo(0f)
                         } else {
                             offsetX.animateTo(0f, tween(200))
