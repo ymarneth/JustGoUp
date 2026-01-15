@@ -25,60 +25,58 @@ fun SwipeItem(
     onSwipeRight: () -> Unit,
     content: @Composable () -> Unit
 ) {
-    val offsetX = remember { Animatable(0f) }
+    val offsetX = remember { mutableStateOf(0f) }
     val scope = rememberCoroutineScope()
     val threshold = 200f
-
     val swipeHandled = remember { mutableStateOf(false) }
 
     Box(
         modifier = Modifier.pointerInput(Unit) {
             awaitEachGesture {
-                swipeHandled.value = false   // reset per gesture
+                swipeHandled.value = false
+                offsetX.value = 0f
 
                 val down = awaitFirstDown()
                 var dragAmountX = 0f
+                var isHorizontal = false
 
-                val drag = awaitHorizontalTouchSlopOrCancellation(down.id) { change, over ->
-                    if (swipeHandled.value) return@awaitHorizontalTouchSlopOrCancellation
-
-                    dragAmountX += over
+                val drag = awaitHorizontalTouchSlopOrCancellation(down.id) { change, _ ->
+                    isHorizontal = true
                     change.consume()
-
-                    scope.launch {
-                        offsetX.snapTo(dragAmountX)
-                    }
                 }
 
-                if (drag != null) {
+                if (drag != null && isHorizontal) {
                     drag(drag.id) { change ->
                         if (swipeHandled.value) return@drag
 
                         val delta = change.positionChange().x
                         dragAmountX += delta
+                        offsetX.value = dragAmountX
                         change.consume()
-
-                        scope.launch {
-                            offsetX.snapTo(dragAmountX)
-                        }
                     }
 
-                    scope.launch {
-                        if (abs(dragAmountX) > threshold && !swipeHandled.value) {
-                            swipeHandled.value = true
+                    if (!swipeHandled.value) {
+                        swipeHandled.value = true
+                        val isSwipe = abs(dragAmountX) > threshold
+                        val isRight = dragAmountX > 0
 
-                            val isRight = dragAmountX > 0
-
+                        if (isSwipe) {
                             if (isRight) onSwipeRight() else onSwipeLeft()
 
-                            offsetX.animateTo(
-                                if (isRight) 1000f else -1000f,
-                                tween(250)
-                            )
-
-                            offsetX.snapTo(0f)
-                        } else if (!swipeHandled.value) {
-                            offsetX.animateTo(0f, tween(200))
+                            scope.launch {
+                                val anim = Animatable(dragAmountX)
+                                anim.animateTo(
+                                    targetValue = if (isRight) 1000f else -1000f,
+                                    animationSpec = tween(250)
+                                )
+                                offsetX.value = 0f
+                            }
+                        } else {
+                            scope.launch {
+                                val anim = Animatable(dragAmountX)
+                                anim.animateTo(0f, tween(200))
+                                offsetX.value = 0f
+                            }
                         }
                     }
                 }
