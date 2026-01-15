@@ -20,4 +20,10 @@ class SessionDetailViewModel(
             _session.value = climbingSessionRepository.getSessionById(sessionId)
         }
     }
+
+    fun deleteBoulder(id: String) {
+        viewModelScope.launch {
+            climbingSessionRepository.deleteBoulderFromSession(id)
+        }
+    }
 }

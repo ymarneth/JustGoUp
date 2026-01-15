@@ -1,12 +1,11 @@
 package org.clc.justgoup.ui.climbingSessionDetail
 
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -23,6 +22,13 @@ import androidx.compose.ui.unit.dp
 import org.clc.justgoup.di.provideClimbingSessionRepository
 import org.clc.justgoup.ui.theme.BoulderTheme
 import org.clc.justgoup.ui.theme.components.BoulderButton
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.padding
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.toMutableStateList
+import org.clc.justgoup.ui.theme.components.SwipeItem
 
 @Composable
 fun SessionDetailScreen(
@@ -31,14 +37,17 @@ fun SessionDetailScreen(
 ) {
     val repository = provideClimbingSessionRepository()
     val viewModel = remember { SessionDetailViewModel(repository, sessionId) }
-
     val session by viewModel.session.collectAsState(initial = null)
 
-    session?.let { session ->
-        Column(
-            modifier = Modifier.fillMaxSize()
-        ) {
-            SessionHeader(session = session)
+    val localBoulders = remember(session?.boulders) {
+        session?.boulders?.toMutableStateList() ?: mutableStateListOf()
+    }
+
+    val pendingDeleteId = remember { mutableStateOf<String?>(null) }
+
+    session?.let {
+        Column(modifier = Modifier.fillMaxSize()) {
+            SessionHeader(session = it)
 
             Spacer(Modifier.height(BoulderTheme.spacing.medium.dp))
 
@@ -55,23 +64,79 @@ fun SessionDetailScreen(
                 verticalArrangement = Arrangement.spacedBy(BoulderTheme.spacing.medium.dp),
                 contentPadding = PaddingValues(bottom = BoulderTheme.spacing.extraLarge.dp)
             ) {
-                items(session.boulders) { boulder ->
-                    BoulderCard(
-                        boulder = boulder,
-                        modifier = Modifier.fillMaxWidth()
-                    )
+                items(
+                    items = localBoulders,
+                    key = { b -> b.id }
+                ) { boulder ->
+                    val isPending = pendingDeleteId.value == boulder.id
+
+                    if (isPending) {
+                        ConfirmationCard(
+                            onCancel = { pendingDeleteId.value = null },
+                            onConfirm = {
+                                pendingDeleteId.value = null
+                                localBoulders.remove(boulder)
+                                viewModel.deleteBoulder(boulder.id)
+                            }
+                        )
+                    } else {
+                        SwipeItem(
+                            onSwipeLeft = { pendingDeleteId.value = boulder.id },
+                            onSwipeRight = { pendingDeleteId.value = boulder.id }
+                        ) {
+                            BoulderCard(
+                                boulder = boulder,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .animateItem(
+                                        placementSpec = tween(
+                                            durationMillis = 1000,
+                                            easing = FastOutSlowInEasing
+                                        )
+                                    )
+                            )
+                        }
+                    }
                 }
             }
         }
-    } ?: run {
-        Box(
-            Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
+    }
+}
+
+@Composable
+fun ConfirmationCard(
+    onCancel: () -> Unit,
+    onConfirm: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(16.dp)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "Loading session…",
-                color = BoulderTheme.colors.textSecondary
+                text = "Delete this boulder?",
+                style = BoulderTheme.typography.body,
+                color = BoulderTheme.colors.textPrimary
             )
+
+            Row(horizontalArrangement = Arrangement.spacedBy(BoulderTheme.spacing.small.dp)) {
+                BoulderButton(
+                    text = "Cancel",
+                    onClick = onCancel,
+                    modifier = Modifier
+                )
+                BoulderButton(
+                    text = "Delete",
+                    onClick = onConfirm,
+                    modifier = Modifier
+                )
+            }
         }
     }
 }
