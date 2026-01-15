@@ -72,9 +72,7 @@ fun AppNavHost(
                 AddSession(
                     onOpenSession = { id ->
                         nav.navigate(SessionDetail(id)) {
-                            popUpTo<AddSession> {
-                                inclusive = true
-                            }
+                            popUpTo<AddSession> { inclusive = true }
                         }
                     }
                 )
@@ -85,9 +83,8 @@ fun AppNavHost(
                 AddBoulder(
                     onOpenSession = { id ->
                         nav.navigate(SessionDetail(id)) {
-                            popUpTo<AddSession> {
-                                inclusive = true
-                            }
+                            popUpTo<SessionDetail> { inclusive = true }
+                            launchSingleTop = true
                         }
                     },
                     sessionId = args.sessionId
