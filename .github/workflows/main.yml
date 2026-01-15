@@ -1,0 +1,13 @@
+name: Version Management
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  version:
+    uses: ./.github/workflows/versioning.yml

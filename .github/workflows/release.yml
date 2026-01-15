@@ -2,22 +2,19 @@ name: Release new version
 
 on:
   push:
-    branches: [ "main" ]
+    tags:
+      - '[0-9]+.[0-9]+.[0-9]+'
   workflow_dispatch:
 
 permissions:
   contents: write
 
 jobs:
-  version:
-    uses: ./.github/workflows/versioning.yml
-          
   build-android:
     uses: ./.github/workflows/android-build.yml
-    needs: version
     with:
       project-dir: "JustGoUp/composeApp"
-      version: ${{ needs.version.outputs.version }}
+      version: ${{ github.ref_name }}
     secrets:
       ANDROID_KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_B64 }}
       ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
@@ -25,7 +22,7 @@ jobs:
       ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
 
   create-release:
-    needs: [version, build-android]
+    needs: [build-android]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -33,27 +30,18 @@ jobs:
       - name: Download APK artifact
         uses: actions/download-artifact@v4
         with:
-          release_name: JustGoUp-Android-${{ needs.version.outputs.version }}-Release
+          name: JustGoUp-Android-${{ github.ref_name }}-Release
           path: ./apk
 
-      - name: Create GitHub release draft
+      - name: Create draft GitHub release
         id: release
-        uses: actions/create-release@v1
+        uses: softprops/action-gh-release@v1
         with:
-          tag_name: ${{ needs.version.outputs.version }}
-          name: JustGoUp Android ${{ needs.version.outputs.version }}
-          body: Release ${{ needs.version.outputs.version }}
+          tag_name: ${{ github.ref_name }}
+          name: JustGoUp ${{ github.ref_name }}
+          body: Release ${{ github.ref_name }}
           draft: true
           prerelease: false
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Upload APK to release draft
-        uses: actions/upload-release-asset@v1
-        with:
-          upload_url: ${{ steps.release.outputs.upload_url }}
-          asset_path: ./apk/composeApp-release-${{ needs.version.outputs.version }}.apk
-          asset_name: composeApp-release-${{ needs.version.outputs.version }}.apk
-          asset_content_type: application/vnd.android.package-archive
+          files: ./apk/composeApp-release-${{ github.ref_name }}.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
