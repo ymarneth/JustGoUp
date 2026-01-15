@@ -79,7 +79,7 @@ jobs:
         run: |
           cd ${{ inputs.project-dir }}/build/outputs/apk/release
           for f in composeApp-release*.apk; do
-            mv "$f" "composeApp-release-${{ inputs.version }}.apk"
+            mv "$f" "justgoup-release-${{ inputs.version }}.apk"
           done
 
       - name: Upload APK artifact
@@ -87,10 +87,10 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: JustGoUp-Android-${{ inputs.version }}-Release
-          path: ${{ inputs.project-dir }}/build/outputs/apk/release/composeApp-release-${{ inputs.version }}.apk
+          path: ${{ inputs.project-dir }}/build/outputs/apk/release/justgoup-release-${{ inputs.version }}.apk
 
       - name: Set output
         id: set-output
         run: |
-          echo "artifact-path=${{ inputs.project-dir }}/build/outputs/apk/release/composeApp-release-${{ inputs.version }}.apk" >> $GITHUB_OUTPUT
+          echo "artifact-path=${{ inputs.project-dir }}/build/outputs/apk/release/justgoup-release-${{ inputs.version }}.apk" >> $GITHUB_OUTPUT
 

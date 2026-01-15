@@ -3,7 +3,7 @@ name: Release new version
 on:
   push:
     tags:
-      - '[0-9]+.[0-9]+.[0-9]+'
+      - '[0-9]*.[0-9]*.[0-9]*'
   workflow_dispatch:
 
 permissions:
@@ -42,6 +42,6 @@ jobs:
           body: Release ${{ github.ref_name }}
           draft: true
           prerelease: false
-          files: ./apk/composeApp-release-${{ github.ref_name }}.apk
+          files: ./apk/justgoup-release-${{ github.ref_name }}.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
