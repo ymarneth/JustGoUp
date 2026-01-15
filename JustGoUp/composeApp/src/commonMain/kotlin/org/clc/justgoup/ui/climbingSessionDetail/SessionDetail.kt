@@ -23,12 +23,10 @@ import org.clc.justgoup.di.provideClimbingSessionRepository
 import org.clc.justgoup.ui.theme.BoulderTheme
 import org.clc.justgoup.ui.theme.components.BoulderButton
 import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.mutableStateMapOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.toMutableStateList
 import org.clc.justgoup.ui.theme.components.SwipeItem
 
@@ -45,7 +43,7 @@ fun SessionDetailScreen(
         session?.boulders?.toMutableStateList() ?: mutableStateListOf()
     }
 
-    val pendingDelete = remember { mutableStateMapOf<String, Boolean>() }
+    val pendingDeleteId = remember { mutableStateOf<String?>(null) }
 
     session?.let {
         Column(modifier = Modifier.fillMaxSize()) {
@@ -70,21 +68,21 @@ fun SessionDetailScreen(
                     items = localBoulders,
                     key = { b -> b.id }
                 ) { boulder ->
-                    val isPending = pendingDelete[boulder.id] == true
+                    val isPending = pendingDeleteId.value == boulder.id
 
                     if (isPending) {
                         ConfirmationCard(
-                            onCancel = { pendingDelete.remove(boulder.id) },
+                            onCancel = { pendingDeleteId.value = null },
                             onConfirm = {
-                                pendingDelete.remove(boulder.id)
-                                localBoulders.remove(boulder)       // remove first for animation
+                                pendingDeleteId.value = null
+                                localBoulders.remove(boulder)
                                 viewModel.deleteBoulder(boulder.id)
                             }
                         )
                     } else {
                         SwipeItem(
-                            onSwipeLeft = { pendingDelete[boulder.id] = true },
-                            onSwipeRight = { pendingDelete[boulder.id] = true }
+                            onSwipeLeft = { pendingDeleteId.value = boulder.id },
+                            onSwipeRight = { pendingDeleteId.value = boulder.id }
                         ) {
                             BoulderCard(
                                 boulder = boulder,
