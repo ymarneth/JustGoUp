@@ -1,0 +1,26 @@
+# Terraform / OpenTofu
+*.tfstate
+*.tfstate.backup
+.terraform/
+.tofu/
+
+# Crash logs, plan outputs
+*.log
+*.tfplan
+*.out
+
+# Local override files
+terraform.tfvars
+*.auto.tfvars
+*.local
+
+# OS / editor files
+.DS_Store
+*.swp
+*.swo
+.idea/
+.vscode/
+
+# Kubernetes manifests generated locally
+*.yaml
+*.yml
