@@ -65,7 +65,7 @@ resource "kubernetes_deployment_v1" "kafka" {
 
           env {
             name  = "KAFKA_LOG_DIRS"
-            value = "/kafka-logs/kraft"
+            value = "/data/kafka"
           }
 
           port {
@@ -77,14 +77,13 @@ resource "kubernetes_deployment_v1" "kafka" {
           }
 
           volume_mount {
-            name       = "kafka-data"
-            mount_path = "/kafka-logs"
+            name       = "shared-data"
+            mount_path = "/data"
           }
         }
 
         volume {
-          name = "kafka-data"
-
+          name = "shared-data"
           persistent_volume_claim {
             claim_name = var.pvc_name
           }
