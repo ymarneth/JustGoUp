@@ -120,3 +120,39 @@ resource "kubernetes_service_v1" "kafka" {
     type = "ClusterIP"
   }
 }
+
+resource "kubernetes_job_v1" "kafka_topics" {
+  metadata {
+    name      = "kafka-create-topics"
+    namespace = var.namespace
+  }
+
+  spec {
+    template {
+      metadata { name = "kafka-create-topics" }
+      spec {
+        restart_policy = "Never"
+
+        container {
+          name  = "kafka-cli"
+          image = "apache/kafka:4.1.1"
+
+          command = [
+            "/opt/kafka/bin/kafka-topics.sh",
+            "--create",
+            "--bootstrap-server",
+            "kafka-demo:9092",
+            "--replication-factor",
+            "1",
+            "--partitions",
+            "1",
+            "--topic",
+            "ingestion-topic"
+          ]
+        }
+      }
+    }
+
+    backoff_limit = 0
+  }
+}
