@@ -20,7 +20,3 @@ terraform.tfvars
 *.swo
 .idea/
 .vscode/
-
-# Kubernetes manifests generated locally
-*.yaml
-*.yml
