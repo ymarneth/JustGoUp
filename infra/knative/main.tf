@@ -10,17 +10,11 @@ resource "kubernetes_manifest" "ingestion_service" {
       template = {
         spec = {
           containers = [{
-            image = "ghcr.io/justgoup/ingestion-go-kafka:latest"
-            env = [
-              {
-                name  = "KAFKA_BOOTSTRAP_SERVERS"
-                value = "kafka-demo:9092"
-              },
-              {
-                name  = "KAFKA_TOPIC"
-                value = "ingestion-topic"
-              }
-            ]
+            image = "gcr.io/knative-samples/helloworld-go"
+            env = [{
+              name  = "TARGET"
+              value = "JustGoUp"
+            }]
           }]
         }
       }
