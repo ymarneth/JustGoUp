@@ -50,7 +50,16 @@ Export a separate KUBECONFIG file:
 
 ```sh
 export KUBECONFIG="$HOME/.kube/justgoup-config"
-``
+```
+
+Or on windows:
+```sh
+[System.Environment]::SetEnvironmentVariable(
+    "KUBECONFIG",
+    "$HOME\.kube\justgoup-config",
+    "User"
+)
+```
 
 Switch contexts to your Minikube profile:
 
