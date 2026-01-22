@@ -212,3 +212,17 @@ curl http://localhost:8080
 
 - All Tofu templates are in the infra/ directory.
 - Use branches and commits responsibly when testing new resources.
+
+## 8. Get Mongo Express running
+Keep this open and running:
+```sh
+kubectl port-forward -n justgoup deploy/mongo-express 8081:8081 --address 127.0.0.1
+```
+
+In a second terminal then execute:
+```sh
+docker run --rm -p 8081:8081 `
+>>   -e ME_CONFIG_MONGODB_URL="mongodb://<ROOT_USER>:<ROOT_PASSWORD>@host.docker.internal:27017/admin?authSource=admin" `
+>>   -e ME_CONFIG_BASICAUTH="false" `
+>>   mongo-express:1.0.2
+```
