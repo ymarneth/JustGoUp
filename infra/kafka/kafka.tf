@@ -133,6 +133,16 @@ resource "kubernetes_job_v1" "kafka_topics" {
       spec {
         restart_policy = "Never"
 
+        init_container {
+          name  = "wait-for-kafka"
+          image = "busybox"
+          command = [
+            "sh",
+            "-c",
+            "until nc -z kafka-demo.justgoup.svc.cluster.local 9092; do echo waiting for kafka; sleep 2; done"
+          ]
+        }
+
         container {
           name  = "kafka-cli"
           image = "apache/kafka:4.1.1"
@@ -141,13 +151,14 @@ resource "kubernetes_job_v1" "kafka_topics" {
             "/opt/kafka/bin/kafka-topics.sh",
             "--create",
             "--bootstrap-server",
-            "kafka-demo:9092",
+            "kafka-demo.justgoup.svc.cluster.local:9092",
             "--replication-factor",
             "1",
             "--partitions",
             "1",
             "--topic",
-            "ingestion-topic"
+            "ingestion-topic",
+            "--if-not-exists"
           ]
         }
       }
