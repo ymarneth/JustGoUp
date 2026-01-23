@@ -15,3 +15,23 @@ variable "kafka_enabled" {
   type        = bool
   default     = true
 }
+
+variable "mongodb_storage_class_name" {
+  type    = string
+  default = null
+}
+
+variable "mongodb_persistence_size" {
+  type    = string
+  default = "5Gi"
+}
+
+variable "mongodb_root_password" {
+  type      = string
+  sensitive = true
+}
+
+variable "mongodb_app_password" {
+  type      = string
+  sensitive = true
+}
