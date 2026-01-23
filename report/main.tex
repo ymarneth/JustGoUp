@@ -145,9 +145,9 @@ kubectl config set-context --current --namespace=knative-operator
 kubectl get deployment knative-operator
 \end{lstlisting}
 
-For the networking layer, we chose the Kourier Ingress, which is installed by creating a KnativeServing custom resource:
+For the networking layer, we chose the Kourier Ingress, which is installed by creating a KnativeServing custom resource for Knative Serving:
 
-\begin{lstlisting}[caption={Install Knative operator}]
+\begin{lstlisting}[caption={Knative Serving with Kourier Ingress}]
 apiVersion: operator.knative.dev/v1beta1
 kind: KnativeServing
 metadata:
@@ -162,68 +162,194 @@ spec:
       ingress-class: "kourier.ingress.networking.knative.dev"
 \end{lstlisting}
 
-Then, Knative Serving and Eventing can be installed using the operator:
+Then, Eventing can also be installed using the operator by creating the respective custom resources:
 
-\begin{lstlisting}[language=bash, caption={Install Knative operator}]
-# install the Knative operator    
-kubectl apply -f https://github.com/knative/operator/releases/download/knative-v1.20.1/operator.yaml
-
-# ensure the correct namespace is set
-kubectl config set-context --current --namespace=knative-operator
-
-# verify the installation
-kubectl get deployment knative-operator
+\begin{lstlisting}[caption={Knative Eventing resource}]
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: knative-eventing
+---
+apiVersion: operator.knative.dev/v1beta1
+kind: KnativeEventing
+metadata:
+  name: knative-eventing
+  namespace: knative-eventing
 \end{lstlisting}
 
-\section{Tables and figures}
+While the Knative operator simplifies the installation process, we encountered some challenges during the installation, where the activator pod was not starting correctly due to not reaching the Knative Autoscaler service. A lot of time was spent debugging this issue, which could not be resolved despite our efforts.
 
-\subsection{Tables}
+\subsection{Kafka}
 
-Table \ref{tab:table} shows an example table. The \verb|\tabletext{}| is used to add notes to tables easily.
+The Kafka deployment was provisioned using OpenTofu, defining all infrastructure resources declaratively. The implementation uses Apache Kafka version 4.1.1 running in KRaft mode (Kafka Raft), which eliminates the dependency on Apache Zookeeper using Kafka's built-in consensus protocol. The deployment runs a single node that serves both as a broker and controller. A persistent volume claim is used to ensure data persistence across pod restarts, which is also provisioned via OpenTofu.
 
-\begin{table}[H]
-    \centering
-    \caption{Astronomical Object Data}
-    \label{tab:table}
-    \begin{tabular}{ll}
-        \toprule
-        \textbf{Object}  & \textbf{Distance (Light Years)} \\
-        \midrule
-        Alpha Centauri   & 4.37                            \\
-        Betelgeuse       & 642.5                           \\
-        Andromeda Galaxy & 2.537 million                   \\
-        \bottomrule
-    \end{tabular}
+The infrastructure definition includes three main Kubernetes resources:
 
-    \tabletext{Note: The table contains data of some famous celestial objects.}
+\begin{enumerate}
+    \item A \textbf{Deployment} that manages the Kafka pod lifecycle and environment variables for KRaft configuration
+    \item A \textbf{Service} that provides stable network endpoints for both broker and controller
+    \item A \textbf{Job} that can automatically create the necessary topics after Kafka becomes available
+\end{enumerate}
 
-\end{table}
+This workflow allows to easily set up the Kafka infrastructure with a single command.
 
-\subsection{Figures}
+\subsection{MongoDB}
 
-Fig. \ref{fig:examplefloat} shows an example of two figures that covers the width of the page. It can be placed at the top or bottom of the page. The space between the figures can also be changed using the \verb|\hspace{Xpt}| command.
+MongoDB was chosen because the climbing session data is naturally represented as documents, making MongoDB's document-based storage model a perfect fit. In most cases, climbing sessions are loaded with all their associated data, such as boulder attempts and location. In the app this is represented as relational data, which requires multiple joins, making queries more complex and less efficient.
 
-\begin{figure*}[t] % t for position at the top of the current page; b for position at the bottom; p for new page
-    \centering
-    \begin{subfigure}[b]{0.38\linewidth} % Fig (a)
-        \includegraphics[width=\linewidth]{Example2.pdf}
-        \caption{Example left figure.}
-        \label{fig:figa}
-    \end{subfigure}
-    \hspace{20pt}   % Space between the figures
-    \begin{subfigure}[b]{0.375\linewidth} % Fig (b)
-        \includegraphics[width=\linewidth]{Example3.pdf}
-        \caption{Example right figure.}
-        \label{fig:figb}
-    \end{subfigure}
-    \caption{Example figure that covers the width of the page obtained from PGFPlots \cite{PFGPlots}.}
-    \label{fig:examplefloat}
-\end{figure*}
+The MongoDB deployment was also done completely using OpenTofu with the Bitnami MongoDB Helm chart, which provides a production-ready MongoDB installation with minimal configuration. The data is persisted in a PersistentVolumeClaim to ensure the data survives pod restarts. The application database (\texttt{justgoup}) is automatically created during deployment.
 
-%----------------------------------------------------------
+For development purposes, an automated data seeding mechanism was also implemented as a Kubernetes Job. This job executes after MongoDB deployment inserts sample data with indexes for query optimization.
 
-\printbibliography
+Additionally, Mongo Express was deployed to provide a web-based interface for interacting with the MongoDB instance during development.
 
-%----------------------------------------------------------
+\section{Results}
+
+At the end of the project, we were able to implement parts of the original vision, but not the complete connected system. The client application was developed and is able to log climbing sessions, but the integration with the serverless ingestion layer and event streaming components is not fully functional yet. While all parts of the system were implemented individually, the complete end-to-end data flow from the client application to the database is not yet established.
+
+\subsection{Automated Infrastructure Provisioning}
+
+All infrastructure components are defined declaratively using OpenTofu. Using OpenTofu ensures that the infrastructure can be recreated reliably on any machine with a sufficiently prepared cluster, manual setup steps are minimized as much as possible, configuration changes are version-controlled, and the local development environment resembles the later OKD deployment as closely as possible.
+
+The infrastructure can be provisioned or removed using a single command:
+
+\begin{verbatim}
+tofu apply
+tofu destroy
+\end{verbatim}
+
+This approach significantly reduces setup errors and improves reproducibility.
+
+\subsection{Scalability}
+
+Scalability is considered at both the application and infrastructure level.
+
+\subsubsection*{Infrastructure Perspective}
+
+From an infrastructure perspective:
+
+\begin{itemize}
+    \item All services are deployed as Kubernetes workloads and can be scaled horizontally.
+    \item Kafka enables decoupled, asynchronous communication between producers and consumers. New consumers can be added without modifying existing services.
+\end{itemize}
+
+\subsubsection*{Architectural Perspective}
+
+From an architectural perspective:
+
+\begin{itemize}
+    \item Event-based communication via Kafka avoids tight coupling.
+    \item MongoDB supports horizontal scaling and flexible data models.
+    \item Stateless services (e.g., ingestion services) can be replicated easily.
+\end{itemize}
+
+While the local Minikube setup uses single replicas for simplicity, the architecture is designed so that scaling up in a real cluster (e.g., OKD) only requires configuration changes, not architectural changes.
+
+\subsection{Fault Tolerance}
+
+Fault tolerance is addressed through both platform mechanisms and architectural decisions.
+
+\subsubsection*{Kubernetes Mechanisms}
+
+Kubernetes provides:
+
+\begin{itemize}
+    \item Automatic pod restarts on failure
+    \item Health monitoring
+    \item Rolling updates
+\end{itemize}
+
+\subsubsection*{Messaging and Data Persistence}
+
+Kafka contributes to fault tolerance by:
+
+\begin{itemize}
+    \item Persisting events independently of consumers
+    \item Allowing consumers to recover and reprocess messages
+    \item Decoupling producers from downstream systems
+\end{itemize}
+
+MongoDB persistence is handled via PersistentVolumeClaims, ensuring that:
+
+\begin{itemize}
+    \item Data survives pod restarts
+    \item Temporary failures do not result in data loss
+\end{itemize}
+
+This combination ensures that failures do not break the overall system. Of course this also depends on the specific failure scenario and can be further improved in a production environment.
+
+\subsection{NoSQL}
+
+Compared to a relational database, MongoDB reduces complexity for storing event data and enables flexible experimentation during development.
+
+\subsection{Replication}
+
+Replication is used implicitly through the chosen technologies and can be extended further in production environments.
+
+In the current setup:
+
+\begin{itemize}
+    \item Kafka supports topic replication (configured minimally for local development)
+    \item MongoDB is deployed as a standalone instance locally but supports replica sets in production
+    \item Kubernetes allows multiple replicas of stateless services
+\end{itemize}
+
+Although the local Minikube setup uses single-node configurations for simplicity, the architecture is replication-ready and can be extended without redesign.
+
+\subsection{Costs}
+
+The solution is designed to minimize costs during development while remaining cloud-ready.
+
+For local development:
+
+\begin{itemize}
+    \item Minikube runs entirely on the developer's machine
+    \item No cloud resources are consumed
+    \item Costs are effectively zero
+\end{itemize}
+
+In a cloud or OKD environment:
+
+\begin{itemize}
+    \item Costs scale with actual resource usage
+    \item Services can be scaled independently
+    \item Managed Kubernetes platforms reduce operational overhead
+\end{itemize}
+
+Compared to a traditional non-cloud solution:
+
+\begin{itemize}
+    \item No dedicated hardware is required
+    \item Scaling does not require upfront investment
+    \item Infrastructure can be adjusted dynamically
+\end{itemize}
+
+\section{Lessons learned}
+
+\subsection{Working with OpenTofu}
+
+OpenTofu proved to be a powerful tool for managing infrastructure as code. It effectively automated the entire process of provisioning and deprovisioning resources and made it easy to track the changes to the infrastructure over time.
+
+Some resources could not be fully managed with OpenTofu, such as the Knative operator installation. However, this task installs cluster-wide resources that should not be handled by project-specific infrastructure code anyway.
+
+Switching the deployment from Minikube to OKD was straightforward, as the infrastructure definitions are mostly platform-agnostic. Using different contexts for different clusters made it easy to switch between environments.
+
+All in all, OpenTofu significantly improved our workflow and will be a valuable tool for future projects.
+
+\subsection{Preparing a cluster}
+
+As stated before, we had to switch from GCP to a private OKD cluster due to account issues. This change required us to adapt our implementation plan and learn how to work with Kubernetes-based solutions. Then, waiting for the cluster administrator to install the Knative operator caused significant delays.
+
+Local development with Minikube allowed us to continue working on the project while waiting for the OKD cluster to be prepared. However, some difficulties with Minikube on Windows caused additional delays again.
+
+Here, we learned the importance of having a well-prepared cluster environment - in the best case one that we can fully manage ourselves. It may have been better to switch to a different public cloud provider instead of using a private cluster, as this would have allowed us to have full control over the environment and may have avoided the trouble with the Knative operator installation.
+
+\subsection{Minikube as Stand-In}
+
+Minikube served as a valuable stand-in for the OKD cluster during development. It allowed us to continue working on the implementation while waiting for the OKD cluster. However, Minikube and other docker-based Kubernetes solutions come with their own set of challenges, especially on Windows systems.
+
+Especially networking issues as well as issues with virtualization were encountered, which caused some frustration and debugging sessions.
+
+While local solution such as Minikube sound great for such use cases, it is important to be aware of the potential pitfalls. In our experience, it may be a good tool for prototyping and short-term development while waiting fow a more permanent solution, but it should not be relied upon for long-term development.
 
 \end{document}

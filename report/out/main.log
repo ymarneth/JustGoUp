@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.28 (TeX Live 2025) (preloaded format=pdflatex 2025.12.28)  23 JAN 2026 16:26
+This is pdfTeX, Version 3.141592653-2.6-1.40.28 (TeX Live 2025) (preloaded format=pdflatex 2025.12.28)  23 JAN 2026 18:35
 entering extended mode
  restricted \write18 enabled.
  file:line:error style messages enabled.
@@ -2074,19 +2074,22 @@ LaTeX Font Info:    Font shape `T1/lmtt/bx/n' in size <10.95> not available
 (Font)              Font shape `T1/lmtt/b/n' tried instead on input line 142.
  [3{/usr/local/texlive/2025/texmf-dist/fonts/enc/dvips/lm/lm-ec.enc}{/usr/local
 /texlive/2025/texmf-dist/fonts/enc/dvips/stix2-type1/stix2-mathsf.enc} <./figur
-es/architecture.png>]
-<figures/Example2.pdf, id=59, 236.885pt x 188.705pt>
-File: figures/Example2.pdf Graphic file (type pdf)
-<use figures/Example2.pdf>
-Package pdftex.def Info: figures/Example2.pdf  used on input line 209.
-(pdftex.def)             Requested size: 200.02545pt x 159.34613pt.
-<figures/Example3.pdf, id=60, 235.88126pt x 190.7125pt>
-File: figures/Example3.pdf Graphic file (type pdf)
-<use figures/Example3.pdf>
-Package pdftex.def Info: figures/Example3.pdf  used on input line 215.
-(pdftex.def)             Requested size: 197.39099pt x 159.59502pt.
- [4] [5 <./figures/Example2.pdf> <./figures/Example3.pdf>]
+es/architecture.png>] [4]
+LaTeX Font Info:    Font shape `T1/phv/b/it' in size <10.95> not available
+(Font)              Font shape `T1/phv/b/sl' tried instead on input line 227.
+LaTeX Font Info:    Font shape `T1/phv/b/sl' will be
+(Font)              scaled to size 10.40245pt on input line 227.
+LaTeX Font Info:    Trying to load font information for TS1+stix2 on input line
+ 232.
+ (/usr/local/texlive/2025/texmf-dist/tex/latex/stix2-type1/ts1stix2.fd
+File: ts1stix2.fd 2018/04/02 v2.0.0-latex stix2 TS1 font definitions
+)
+Package microtype Info: Character `textflorin ' is missing
+(microtype)             in font `TS1/stix2/m/n/12'.
+(microtype)             Ignoring protrusion settings for this character.
 
+[5{/usr/local/texlive/2025/texmf-dist/fonts/enc/dvips/stix2-type1/stix2-ts1.enc
+}] [6] [7] 
 enddocument/afterlastpage (AED): lastpage setting LastPage.
 (out/main.aux)
  ***********
@@ -2098,27 +2101,27 @@ Package logreq Info: Writing requests to 'main.run.xml'.
 
  ) 
 Here is how much of TeX's memory you used:
- 70175 strings out of 467538
- 1536421 string characters out of 5419551
- 2834775 words of memory out of 5000000
- 98021 multiletter control sequences out of 15000+600000
- 780219 words of font info for 213 fonts, out of 8000000 for 9000
+ 70011 strings out of 467538
+ 1532357 string characters out of 5419551
+ 2812137 words of memory out of 5000000
+ 97806 multiletter control sequences out of 15000+600000
+ 777568 words of font info for 230 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
  137i,13n,143p,1193b,2148s stack positions out of 10000i,1000n,20000p,200000b,200000s
 </usr/local/texlive/2025/texmf-dist/fonts/type1/public/stix2-type1/STIX2Math.
 pfb></usr/local/texlive/2025/texmf-dist/fonts/type1/public/stix2-type1/STIX2Tex
 t-Bold.pfb></usr/local/texlive/2025/texmf-dist/fonts/type1/public/stix2-type1/S
-TIX2Text-Italic.pfb></usr/local/texlive/2025/texmf-dist/fonts/type1/public/stix
-2-type1/STIX2Text-Regular.pfb></usr/local/texlive/2025/texmf-dist/fonts/type1/p
-ublic/lm/lmtk10.pfb></usr/local/texlive/2025/texmf-dist/fonts/type1/public/lm/l
-mtt10.pfb></usr/local/texlive/2025/texmf-dist/fonts/type1/public/lm/lmtt12.pfb>
-</usr/local/texlive/2025/texmf-dist/fonts/type1/urw/helvetic/uhvb8a.pfb></usr/l
-ocal/texlive/2025/texmf-dist/fonts/type1/urw/helvetic/uhvr8a.pfb></usr/local/te
-xlive/2025/texmf-dist/fonts/type1/urw/helvetic/uhvro8a.pfb>
-Output written on out/main.pdf (5 pages, 8496473 bytes).
+TIX2Text-Regular.pfb></usr/local/texlive/2025/texmf-dist/fonts/type1/public/lm/
+lmtk10.pfb></usr/local/texlive/2025/texmf-dist/fonts/type1/public/lm/lmtt10.pfb
+></usr/local/texlive/2025/texmf-dist/fonts/type1/public/lm/lmtt12.pfb></usr/loc
+al/texlive/2025/texmf-dist/fonts/type1/urw/helvetic/uhvb8a.pfb></usr/local/texl
+ive/2025/texmf-dist/fonts/type1/urw/helvetic/uhvbo8a.pfb></usr/local/texlive/20
+25/texmf-dist/fonts/type1/urw/helvetic/uhvr8a.pfb></usr/local/texlive/2025/texm
+f-dist/fonts/type1/urw/helvetic/uhvro8a.pfb>
+Output written on out/main.pdf (7 pages, 8333018 bytes).
 PDF statistics:
- 231 PDF objects out of 1000 (max. 8388607)
- 187 compressed objects within 2 object streams
- 54 named destinations out of 1000 (max. 500000)
- 67201 words of extra memory for PDF output out of 74296 (max. 10000000)
+ 250 PDF objects out of 1000 (max. 8388607)
+ 214 compressed objects within 3 object streams
+ 68 named destinations out of 1000 (max. 500000)
+ 71367 words of extra memory for PDF output out of 74296 (max. 10000000)
 
