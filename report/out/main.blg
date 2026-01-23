@@ -1,15 +1,15 @@
 [0] Config.pm:328> INFO - This is Biber 2.21
 [0] Config.pm:331> INFO - Logfile is 'out/main.blg'
-[39] biber:342> INFO - === Fri Jan 23, 2026, 14:10:00
-[45] Biber.pm:421> INFO - Reading 'out/main.bcf'
-[68] Biber.pm:1002> INFO - Found 1 citekeys in bib section 0
+[38] biber:342> INFO - === Fri Jan 23, 2026, 15:54:04
+[44] Biber.pm:421> INFO - Reading 'out/main.bcf'
+[67] Biber.pm:1002> INFO - Found 1 citekeys in bib section 0
 [72] Biber.pm:4487> INFO - Processing section 0
-[77] Biber.pm:4678> INFO - Looking for bibtex file 'tau.bib' for section 0
-[77] bibtex.pm:1713> INFO - LaTeX decoding ...
-[78] bibtex.pm:1519> INFO - Found BibTeX data source 'tau.bib'
-[92] UCollate.pm:68> INFO - Overriding locale 'en-US' defaults 'normalization = NFD' with 'normalization = prenormalized'
-[92] UCollate.pm:68> INFO - Overriding locale 'en-US' defaults 'variable = shifted' with 'variable = non-ignorable'
-[92] Biber.pm:4307> INFO - Sorting list 'ynt/global//global/global/global' of type 'entry' with template 'ynt' and locale 'en-US'
-[92] Biber.pm:4313> INFO - No sort tailoring available for locale 'en-US'
-[94] bbl.pm:676> INFO - Writing 'out/main.bbl' with encoding 'UTF-8'
-[95] bbl.pm:779> INFO - Output to out/main.bbl
+[76] Biber.pm:4678> INFO - Looking for bibtex file 'tau.bib' for section 0
+[76] bibtex.pm:1713> INFO - LaTeX decoding ...
+[77] bibtex.pm:1519> INFO - Found BibTeX data source 'tau.bib'
+[90] UCollate.pm:68> INFO - Overriding locale 'en-US' defaults 'variable = shifted' with 'variable = non-ignorable'
+[91] UCollate.pm:68> INFO - Overriding locale 'en-US' defaults 'normalization = NFD' with 'normalization = prenormalized'
+[91] Biber.pm:4307> INFO - Sorting list 'ynt/global//global/global/global' of type 'entry' with template 'ynt' and locale 'en-US'
+[91] Biber.pm:4313> INFO - No sort tailoring available for locale 'en-US'
+[93] bbl.pm:676> INFO - Writing 'out/main.bbl' with encoding 'UTF-8'
+[93] bbl.pm:779> INFO - Output to out/main.bbl

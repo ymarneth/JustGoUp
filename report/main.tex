@@ -15,6 +15,7 @@
 \documentclass[12pt,a4paper,onecolumn,twoside]{tau-class/tau}
 \usepackage[english]{babel}
 \usepackage{parskip}
+\usepackage{listings}
 
 %% Spanish babel recomendation
 % \usepackage[spanish,es-nodecimaldot,es-noindentfirst]{babel} 
@@ -55,7 +56,7 @@
 
 %----------------------------------------------------------
 
-\keywords{serverless, event-driven, project report, data ingestion, cloud computing}
+\keywords{serverless, event-driven, data ingestion, cloud computing, project report}
 
 %----------------------------------------------------------
 
@@ -76,37 +77,103 @@
 The basic pipeline consists of a client application that generates events and sends them to a serverless ingestion layer in the cloud. This ingestion layer is responsible for receiving the events and passing them to an event stream. From there, downstream processing functions can consume the events, perform analytics and store the results in a database.
 
 
-\section{The clint application}
+\section{The client application}
 
-The \verb*|\maketitle| command generates the title and author information section, including the professor name and affiliations. The title can be modified in tau-class/tau.cls/title style section.
+The client application is a multiplatform mobile app developed using Kotlin Multiplatform Mobile (KMM). Its main purpose is to allow people who engage in Bouldering to log their climbing sessions and track the boulders they have climbed. The logging of climbing sessions thereby generates events that can be sent to the serverless ingestion layer. These events should be handled asynchronously in order to not block the user interface of the app and to sync data after periods of offline usage. Figure \ref{fig:app} shows the client application running on a mobile device.
 
-By default, \textit{tau class} shows the title on the left. However, you can change \verb*|\raggedright| to \verb*|\centering| in \verb*|\titlepos| to move the title to the center or, modify it to your own preferences.
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.5\columnwidth]{./figures/app.jpg}
+    \caption{The client application on a mobile device.}
+    \label{fig:app}
+\end{figure}
 
-In addition to the \verb|\title| command, a custom command named \verb|\journalname| has been added to include more information.
 
-If you do not need this command, you can undefined it and the content will be adjusted automatically.
+\section{Choosing the cloud provider and services}
 
-\section{Abstract}
+Choosing the right cloud provider and services for the prototype was a crucial step in the project. After evaluating various options, Google Cloud Platform (GCP) was selected, in order to experiment with Cloud Functions and Pub/Sub for the serverless ingestion layer and event streaming.
 
-The abstract and keywords are defined using the \verb*|\keywords| and \verb*|\begin{abstract} \end{abstract}| commands respectively. For the abstract to appear, make sure the \verb|\tauabstract| command is always included after the beginning of the document.
+However, due to problems with our GCP account, we had to change plans and decided to use a private cloud based on OKD (OpenShift Kubernetes Distribution) for the implementation of the serverless ingestion layer and event streaming. This change would allow us to continue with the project while still exploring serverless and event-driven architectures, as well as gaining experience with Kubernetes-based solutions, which carry less vendor lock-in compared to managed cloud services.
 
-If the keywords are not declared in the preamble, the content will be adjusted automatically.
+However, this change also meant that we had to adapt our original vision and implementation plan to fit the capabilities and limitations of the private cloud environment. The architecture of the prototype is shown in Figure \ref{fig:architecture}.
 
-\section{Document style options}
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.75\columnwidth]{./figures/architecture.png}
+    \caption{The architecture of the prototype.}
+    \label{fig:architecture}
+\end{figure}
 
-\subsection{Tau start}
+\subsection{IaC provisioning - OpenTofu}
 
-We included the \verb|\taustart{}| command, which provides a personalized lettrine for the beginning of a paragraph.
+For the infrastructure provisioning of the private cloud environment, we decided to use OpenTofu, an Infrastructure as Code (IaC) tool, which is an open-source variant of Terraform. With OpenTofu, we were able to define and manage the infrastructure resources required for our serverless ingestion layer and event streaming in a declarative manner. The explicit goal was to follow a cloud-first approach, where the infrastructure is defined and managed through code, in order to ensure consistency and reproducibility.
 
-\subsection{Line numbering}
 
-By implementing the \textit{lineno} package, the line numbering of the document can be placed with the command \verb|\linenumbers|.
+\subsection{Serverless ingestion layer - Knative}
 
-I recommend placing the command after the abstract and table of contents for a better appearance.
+The serverless ingestion layer was implemented using Knative, a Kubernetes-based platform specifically designed for building and deploying serverless applications. Knative is also an open-source project, which aligns well with our choice of using a private cloud based on OKD. It provides an operator that should make it easy to install on the cluster and offers features such as automatic scaling, eventing and routing.
 
-\subsection{Table of contents}
+\subsection{Event streaming - Apache Kafka}
 
-The \textit{tau class} provides a customized design for the table of contents. Each level of the ToC provides a preview of the content and its location in the document.
+Kafka is a distributed event streaming platform that is widely used for building real-time data pipelines and streaming applications. It is a technology that we wanted to gain experience with, as it is a popular choice for event-driven architectures.
+
+In hindsight, Kafka might have been an overengineered choice for our prototype, as our event streaming requirements were relatively simple and could have been fulfilled with simpler solutions. However, using Kafka provided us with valuable experience in working with a complex event streaming platform and understanding its capabilities and limitations.
+
+\subsection{NoSQL data storage - MongoDB}
+
+MongoDB was chosen as the data store for storing the climbing session data. The document-style storage model is perfect for the climbing session data, which can be represented as documents. MongoDB also offers scalability and schema flexibility, which are important for our use case.
+
+
+\section{Implementation}
+
+The implementation of the prototype was done in several steps, starting with the preparation of the cluster environment, followed by the development of the serverless ingestion layer and the event streaming components. The client application was developed in parallel.
+
+\subsection{Preparing the cluster}
+
+The first step was to set up the OKD cluster and install the necessary components. Knative was installed using the Knative operator, which simplified the installation process, but has to be done by the cluster administrator and therefore is not able to be provisioned automatically. Since using the Knative operator needs additional cluster roles, we had to wait for the cluster administrator. In order to start working on the implementation, we used a local Minikube cluster in the meantime. The operator can also be used to install Knative on Minikube.
+
+The operator is installed by running the following command:
+
+\begin{lstlisting}[language=bash, caption={Install Knative operator}]
+# install the Knative operator    
+kubectl apply -f https://github.com/knative/operator/releases/download/knative-v1.20.1/operator.yaml
+
+# ensure the correct namespace is set
+kubectl config set-context --current --namespace=knative-operator
+
+# verify the installation
+kubectl get deployment knative-operator
+\end{lstlisting}
+
+For the networking layer, we chose the Kourier Ingress, which is installed by creating a KnativeServing custom resource:
+
+\begin{lstlisting}[caption={Install Knative operator}]
+apiVersion: operator.knative.dev/v1beta1
+kind: KnativeServing
+metadata:
+  name: knative-serving
+  namespace: knative-serving
+spec:
+  ingress:
+    kourier:
+      enabled: true
+  config:
+    network:
+      ingress-class: "kourier.ingress.networking.knative.dev"
+\end{lstlisting}
+
+Then, Knative Serving and Eventing can be installed using the operator:
+
+\begin{lstlisting}[language=bash, caption={Install Knative operator}]
+# install the Knative operator    
+kubectl apply -f https://github.com/knative/operator/releases/download/knative-v1.20.1/operator.yaml
+
+# ensure the correct namespace is set
+kubectl config set-context --current --namespace=knative-operator
+
+# verify the installation
+kubectl get deployment knative-operator
+\end{lstlisting}
 
 \section{Tables and figures}
 
@@ -134,18 +201,9 @@ Table \ref{tab:table} shows an example table. The \verb|\tabletext{}| is used to
 
 \subsection{Figures}
 
-Fig. \ref{fig:figure} shows an example figure.
-
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=0.75\columnwidth]{Example.pdf}
-    \caption{Example figure obtained from PGFPlots \cite{PFGPlots}.}
-    \label{fig:figure}
-\end{figure}
-
 Fig. \ref{fig:examplefloat} shows an example of two figures that covers the width of the page. It can be placed at the top or bottom of the page. The space between the figures can also be changed using the \verb|\hspace{Xpt}| command.
 
-\begin{figure*}[tp] % t for position at the top of the current page; b for position at the bottom; p for new page
+\begin{figure*}[t] % t for position at the top of the current page; b for position at the bottom; p for new page
     \centering
     \begin{subfigure}[b]{0.38\linewidth} % Fig (a)
         \includegraphics[width=\linewidth]{Example2.pdf}
@@ -161,189 +219,6 @@ Fig. \ref{fig:examplefloat} shows an example of two figures that covers the widt
     \caption{Example figure that covers the width of the page obtained from PGFPlots \cite{PFGPlots}.}
     \label{fig:examplefloat}
 \end{figure*}
-
-\section{Tau packages}
-
-\subsection{Tauenvs}
-
-This template has its own environment package \textit{tauenvs.sty} designed to enhance the presentation of the document. Among these custom environments are \textit{tauenv}, \textit{info} and \textit{note}.
-
-There are two environments which have a predefined title. These can be included by the command \verb|\begin{note}| and \verb|\begin{info}|. All the environments have the same style.
-
-An example using the tau environment is shown below.
-
-\begin{tauenv}[frametitle=Environment with custom title]
-    This is an example of the custom title environment. To add a title type \verb|[frametitle=Your title]| next to the beginning of the environment (as shown in this example).
-\end{tauenv}
-
-Tauenv is the only environment that you can customize its title. On the other hand, info and note adapt their title to Spanish automatically when this language package is defined.
-
-\subsection{Taubabel}
-
-In previous versions, we included a package called \textit{taubabel}, which have all the commands that automatically translate from English to Spanish when this language package is defined.
-
-By default, tau displays its content in English. However, at the beginning of the document you will find a recommendation when writing in Spanish.
-
-\textit{Note:} You may modify this package if you want to use other language than English or Spanish. This will make easier to translate the document without having to modify the class document.
-
-\section{Equation}
-
-Equation \ref{ec:equation}, shows the Schrödinger equation as an example.
-\begin{equation} \label{ec:equation}
-    \frac{\hbar^2}{2m}\nabla^2\Psi + V(\mathbf{r})\Psi = -i\hbar \frac{\partial\Psi}{\partial t}
-\end{equation}
-The \textit{amssymb} package was not necessary to include, because stix2 font incorporates mathematical symbols for writing quality equations. In case you choose another font, uncomment this package in tau-class/tau.cls/math packages.
-
-If you want to change the values that adjust the spacing above and below the equations, play with \verb|\setlength{\eqskip}{8pt}| value until the preferred spacing is set.
-
-\section{Adding codes}
-
-This class\footnote{Hello there! I am a footnote :)} includes the \textit{listings} package, which offers customized features for adding codes in \LaTeX\ documents specifically for C, C++, \LaTeX\ and Matlab.
-
-You can customize the format in tau-class/tau.cls/listings style.
-
-\lstinputlisting[caption=Example of Matlab code., language=Matlab,label=code]{example.m}
-
-If line numbering is defined at the beginning of the document, I recommend placing the command \verb|\nolinenumbers| at the start and \verb|\linenumbers| at the end of the code.
-
-This will temporarily remove line numbering and the code will look better.
-
-\section{References}
-
-The default formatting for references follows the IEEE style. You can modify the style of your references. See appendix for more information.
-
-\section{Appendix}
-
-\subsection{Alternative title}
-
-You can make the following modification in tau-class/tau.cls/title preferences section to change the position of the title.
-
-\begin{lstlisting}[language=TeX, caption=Alternative title.]
-\newcommand{\titlepos}{\centering}
-\end{lstlisting}
-
-This will move the title to the center.
-
-\subsection{Info environment}
-
-An example of the info environment declared in the ‘tauenvs.sty’ package is shown below. Remember that \textit{info} and \textit{note} are the only packages that translate their title (English or Spanish).
-
-\begin{info}
-    Small example of info environment.
-\end{info}
-
-\subsection{Equation skip value}
-
-With the \verb|\eqskip| command you can change the spacing for equations. The default \textit{eqskip} value is 8pt.
-
-\begin{lstlisting}[language=TeX, caption=Equation skip code.]
-\newlength{\eqskip}\setlength{\eqskip}{8pt}
-	\expandafter\def\expandafter\normalsize\expandafter{%
-		\normalsize%
-		\setlength\abovedisplayskip{\eqskip}%
-		\setlength\belowdisplayskip{\eqskip}%
-		\setlength\abovedisplayshortskip{\eqskip-\baselineskip}%
-		\setlength\belowdisplayshortskip{\eqskip}%
-	}
-\end{lstlisting}
-
-\subsection{References}
-
-In case you require another reference style, you can go to tau-class/tau.cls/biblatex and modify the following.
-
-\begin{lstlisting}[language=TeX, caption=References style.]
-\RequirePackage[
-	backend=biber,
-	style=ieee,
-	sorting=ynt
-]{biblatex}
-\end{lstlisting}
-
-By default, \textit{tau class} has its own .bib for this example, if you want to name your own bib file, change the \textit{addbibresource}.
-
-\begin{lstlisting}[language=TeX]
-\addbibresource{tau.bib}
-\end{lstlisting}
-
-\section{FAQ}
-
-\subsection*{How do I manage my references?}
-
-To manage your references, I recommend using the tool \href{https://www.scribbr.es/citar/generador/folders/73QOXYsCwMRu4ifQaN65mx/lists/msTfx7GJjIAOUkufbISnA/}{scribbr}. You can simply enter the URL or create your own citation, and then export it to \LaTeX\ using the options in the three-dot menu.
-
-The generated citation can be copied and pasted into \textit{tau.bib}, the file designated for bibliography management. You may rename this file, but if you do, remember to update the \verb|\addbibresource| command in \textit{tau.cls} under the \textit{biblatex} section.
-
-\begin{note}
-    Some platforms, such as Google Scholar or scientific journals, provide citations directly in \LaTeX\ format. Therefore, check if there is a ``how to cite this document'' section to streamline the citation process even further.
-\end{note}
-
-Here is an example of a reference code compatible with Bib\TeX.
-
-\begin{verbatim}
-@misc{PFGPlots,
-    author = {PFGPlots},
-    title = {A LaTeX package to create plots.},
-    url = {https://pgfplots.sourceforge.net/}
-}
-\end{verbatim}
-
-If you have any further questions, you can refer to the following page.
-
-\begin{itemize}
-    \item \href{https://es.overleaf.com/learn/latex/Bibliography_management_with_biblatex}{Bibliography management with biblatex}
-\end{itemize}
-
-An example of an IEEE-formatted bibliography can be found in Fig. \ref{fig:figure}. If you are using a different citation style, such as APA, I recommend using the \verb|\parencite| command to automatically include parentheses around citations.
-
-\subsection*{What should I do with the example files?}
-
-If you edit this template, you can remove the example figures, the bibliography entries in \textit{tau.bib}, and the \textit{fibonacci.m} Matlab code without affecting your document.
-
-\subsection*{How do I convert my document into a column?}
-
-At the beginning of the document, you will find a \verb|\documentclass| command. By default, it will show \textit{twocolumn}. Simply change this to \textit{onecolumn} and recompile the document.
-
-If further adjustments are needed, you will have to go to \textit{tau.cls} and navigate to the relevant section (as \textit{geometry package}) to make any other changes or modifications.
-
-\subsection*{How do I change the paper size?}
-
-Similarly, you can change the paper size (by default, this class was adapted for A4 size). The following paper sizes are available in \LaTeX:
-
-\begin{itemize}
-    \item letterpaper (11 $\times$ 8.5 in)
-    \item legalpaper (14 $\times$ 8.5 in)
-    \item executivepaper (10.5 $\times$ 7.25 in)
-    \item a4paper (21 $\times$ 29.7 cm)
-    \item a5paper (21 $\times$ 14.8 cm)
-    \item b5paper (25 $\times$ 17.6 cm)
-\end{itemize}
-
-\subsection*{How do I place equations easily?}
-
-For equations, we have two options: inline or on its own line. For inline equations, simply place a dollar sign (\$) at the beginning and end of the equation. However, if you want the equation to be displayed on its own line, you need to use the equation environment.
-
-If you find it challenging to write formulas directly in \LaTeX, you can use text editors like Word. In the equations menu, you can select \LaTeX\ in the conversion section and copy and paste the equation you wrote into one of these two environments.
-
-\section{Contact me}
-
-You can contact me through these methods.\\
-
-\noindent\faWix\hspace{5pt}\href{https://memonotess1.wixsite.com/memonotess}{https://memonotess1.wixsite.com/memonotess} \\
-\faEnvelope[regular]\hspace{7pt}memo.notess1@gmail.com \\
-\faInstagram\hspace{8pt}memo.notess
-
-\section{Supporting}
-
-Did you like this class document? Check out our new project the \href{https://es.overleaf.com/latex/templates/rho-class-academic-article-template/bpgjxjjqhtfy}{rho class}, made for complex articles and reports.
-
-\subsection*{Any contributions are welcome!}
-
-Coffee keeps me awake and helps me create better \LaTeX\ templates. If you wish to support my work, you can do so through PayPal:\\
-\textbf{\url{https://www.paypal.me/GuillermoJimeenez}}.
-
-\begin{center}
-    Enjoy writing with tau \LaTeX\ class\hspace{5pt}\faChessKnight
-\end{center}
 
 %----------------------------------------------------------
 
