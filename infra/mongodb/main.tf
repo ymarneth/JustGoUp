@@ -1,16 +1,8 @@
-resource "kubernetes_namespace" "ns" {
-  metadata {
-    name = var.namespace
-  }
-}
-
 resource "helm_release" "mongodb" {
   name      = var.release_name
   namespace = var.namespace
 
-  repository = "https://charts.bitnami.com/bitnami"
-  chart      = "mongodb"
-  # version  = "15.6.2"  # optional: comment out if it causes issues
+  chart = "oci://registry-1.docker.io/bitnamicharts/mongodb"
 
   values = [
     yamlencode({
@@ -29,30 +21,19 @@ resource "helm_release" "mongodb" {
       persistence = {
         enabled = true
         size    = var.persistence_size
-        # Only set storageClass if provided
-        storageClass = var.storage_class_name
-      }
-
-      image = {
-        debug = false
       }
     })
   ]
 }
 
-
-#
-# Seed data Job (runs once). If you re-apply and want it to run again,
-# change the job name (e.g., add a suffix) or delete the job in cluster.
-#
-resource "kubernetes_job" "seed_data" {
+resource "kubernetes_job_v1" "seed_data" {
   metadata {
     name      = "mongodb-seed"
     namespace = var.namespace
   }
 
   spec {
-    backoff_limit = 1
+    backoff_limit = 0
 
     template {
       metadata {
@@ -63,83 +44,132 @@ resource "kubernetes_job" "seed_data" {
         restart_policy = "Never"
 
         container {
-          name  = "seed"
-          image = "bitnami/mongodb:7.0"
+          name  = "seed-mongo-data"
+          image = "mongo:8.2.3"
 
           env {
             name  = "MONGO_HOST"
-            value = "${helm_release.mongodb.name}.${var.namespace}.svc.cluster.local"
+            value = "${var.release_name}.${var.namespace}.svc.cluster.local"
           }
-          env {
-            name  = "MONGO_PORT"
+          env { 
+            name = "MONGO_PORT"
             value = "27017"
           }
           env {
-            name  = "MONGO_USER"
+            name = "MONGO_USER"
             value = var.mongodb_app_user
           }
           env {
-            name  = "MONGO_PASS"
+            name = "MONGO_PASS"
             value = var.mongodb_app_password
           }
-          env {
-            name  = "MONGO_DB"
+          env { 
+            name = "MONGO_DB"
             value = var.mongodb_app_db
           }
 
-          command = ["/bin/bash", "-lc"]
-          args = [
+          command = [
+            "mongosh",
+            "mongodb://$(MONGO_USER):$(MONGO_PASS)@$(MONGO_HOST):$(MONGO_PORT)/$(MONGO_DB)?authSource=$(MONGO_DB)",
+            "--eval",
             <<-EOT
-              set -euo pipefail
-              echo "Waiting for MongoDB..."
-              for i in {1..60}; do
-                mongosh "mongodb://$MONGO_USER:$MONGO_PASS@$MONGO_HOST:$MONGO_PORT/$MONGO_DB?authSource=$MONGO_DB" --eval "db.runCommand({ ping: 1 })" >/dev/null 2>&1 && break
-                sleep 2
-              done
+              const dbName = process.env.MONGO_DB;
+              const db = db.getSiblingDB(dbName);
 
-              echo "Seeding example data..."
+              // wipe for local dev
+              db.climbing_sessions.deleteMany({});
 
-              mongosh "mongodb://$MONGO_USER:$MONGO_PASS@$MONGO_HOST:$MONGO_PORT/$MONGO_DB?authSource=$MONGO_DB" <<'MONGO'
-              db = db.getSiblingDB("justgoup");
+              // Session 1 (climbing_session + boulders)
+              db.climbing_sessions.insertOne({
+                _id: "sess_001",
+                location: "BoulderHaus Wien",
+                startTime: new Date("2026-01-10T18:30:00Z"),
+                notes: "Power session. Felt strong on pinches.",
+                boulders: [
+                  {
+                    _id: "b_003",
+                    sessionId: "sess_001",
+                    gradeType: "Font",
+                    gradeValue: "6C",
+                    attempts: 6,
+                    sent: 0,
+                    flash: 0,
+                    repeated: 0,
+                    color: "red",
+                    notes: "Could not stick the dyno.",
+                    createdAt: new Date("2026-01-10T19:55:00Z")
+                  },
+                  {
+                    _id: "b_002",
+                    sessionId: "sess_001",
+                    gradeType: "Font",
+                    gradeValue: "6A+",
+                    attempts: 1,
+                    sent: 1,
+                    flash: 1,
+                    repeated: 0,
+                    color: "green",
+                    notes: "Nice flow.",
+                    createdAt: new Date("2026-01-10T19:25:00Z")
+                  },
+                  {
+                    _id: "b_001",
+                    sessionId: "sess_001",
+                    gradeType: "Font",
+                    gradeValue: "6B",
+                    attempts: 3,
+                    sent: 1,
+                    flash: 0,
+                    repeated: 0,
+                    color: "blue",
+                    notes: "Hard move in the middle.",
+                    createdAt: new Date("2026-01-10T19:05:00Z")
+                  }
+                ]
+              });
 
-              db.users.insertMany([
-                { _id: "u1", name: "Alex", createdAt: new Date(), gym: "BoulderHaus" },
-                { _id: "u2", name: "Sam",  createdAt: new Date(), gym: "ClimbFactory" }
-              ]);
+              // Session 2
+              db.climbing_sessions.insertOne({
+                _id: "sess_002",
+                location: "ClimbFactory",
+                startTime: new Date("2026-01-12T19:00:00Z"),
+                notes: "Endurance session.",
+                boulders: [
+                  {
+                    _id: "b_005",
+                    sessionId: "sess_002",
+                    gradeType: "V-Scale",
+                    gradeValue: "V2",
+                    attempts: 1,
+                    sent: 1,
+                    flash: 0,
+                    repeated: 1,
+                    color: "yellow",
+                    notes: "Repeat for volume.",
+                    createdAt: new Date("2026-01-12T19:55:00Z")
+                  },
+                  {
+                    _id: "b_004",
+                    sessionId: "sess_002",
+                    gradeType: "V-Scale",
+                    gradeValue: "V3",
+                    attempts: 2,
+                    sent: 1,
+                    flash: 0,
+                    repeated: 0,
+                    color: "black",
+                    notes: "Felt pumpy.",
+                    createdAt: new Date("2026-01-12T19:35:00Z")
+                  }
+                ]
+              });
 
-              db.sessions.insertMany([
-                {
-                  userId: "u1",
-                  date: new Date("2026-01-10T18:30:00Z"),
-                  gym: "BoulderHaus",
-                  gradingSystem: "Font",
-                  notes: "Power session",
-                  sends: 4,
-                  flashes: 1
-                },
-                {
-                  userId: "u2",
-                  date: new Date("2026-01-12T19:00:00Z"),
-                  gym: "ClimbFactory",
-                  gradingSystem: "V-Scale",
-                  notes: "Endurance",
-                  sends: 6,
-                  flashes: 0
-                }
-              ]);
+              // indexes matching your SQL query patterns
+              db.climbing_sessions.createIndex({ startTime: -1 });
+              db.climbing_sessions.createIndex({ "boulders._id": 1 });
+              db.climbing_sessions.createIndex({ location: 1, startTime: -1 });
 
-              db.ascents.insertMany([
-                { userId: "u1", sessionDate: new Date("2026-01-10T18:30:00Z"), routeName: "Blue Arete", grade: "6B", attempts: 3, sendType: "send" },
-                { userId: "u1", sessionDate: new Date("2026-01-10T18:30:00Z"), routeName: "Sloper Party", grade: "6A+", attempts: 1, sendType: "flash" },
-                { userId: "u2", sessionDate: new Date("2026-01-12T19:00:00Z"), routeName: "Roof Problem", grade: "V3", attempts: 2, sendType: "send" }
-              ]);
-
-              db.users.createIndex({ name: 1 });
-              db.sessions.createIndex({ userId: 1, date: -1 });
-              db.ascents.createIndex({ userId: 1, sessionDate: -1 });
-
-              print("Done.");
-              MONGO
+              print("Seeded climbing_sessions + embedded boulders.");
             EOT
           ]
         }
