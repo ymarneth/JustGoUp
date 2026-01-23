@@ -22,7 +22,6 @@ resource "kubernetes_deployment_v1" "kafka" {
           name  = "kafka"
           image = "apache/kafka:4.1.1"
 
-          # === REQUIRED FOR KRaft ===
           env {
             name  = "CLUSTER_ID"
             value = "d4f0e6b5-0f4e-4d7e-9e47-4d3c91d9a111"

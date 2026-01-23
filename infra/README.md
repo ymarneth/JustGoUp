@@ -1,100 +1,4 @@
-# Project Documentation
-## 1. Automated Infrastructure Provisioning
-Automated Infrastructure Provisioning is a core aspect of the JustGoUp project.
-All infrastructure components are defined declaratively using OpenTofu (Infrastructure as Code).
-
-This includes:
-- Kubernetes namespaces
-- Deployments (Kafka, MongoDB, Kafka Connect, application services)
-- Services and Jobs
-- Persistent storage (PVCs)
-- Supporting components such as Mongo Express
-
-Using OpenTofu ensures that the infrastructure can be recreated reliably on any machine, manual setup steps are minimized, configuration changes are version-controlled, and the local development environment closely resembles the later OKD deployment. The infrastructure can be provisioned or removed using a single command:
-```sh
-tofu apply
-tofu destroy
-```
-
-This approach significantly reduces setup errors and improves reproducibility.
-
-## 2. Scalability
-Scalability is considered at both the application and infrastructure level.
-
-From an infrastructure perspective:
-- All services are deployed as Kubernetes workloads and can be scaled horizontally
-- Kafka enables decoupled, asynchronous communication between producers and consumers
-- New consumers can be added without modifying existing services
-
-From an architectural perspective:
-- Event-based communication via Kafka avoids tight coupling
-- MongoDB supports horizontal scaling and flexible data models
-- Stateless services (e.g. ingestion services) can be replicated easily
-
-While the local Minikube setup uses single replicas for simplicity, the architecture is designed so that scaling up in a real cluster (e.g. OKD) only requires configuration changes, not architectural changes.
-
-## 3. Fault Tolerance
-Fault tolerance is addressed through both platform mechanisms and architectural decisions.
-
-Kubernetes provides:
-- automatic pod restarts on failure
-- health monitoring
-- self-healing behavior for crashed containers
-
-Kafka contributes to fault tolerance by:
-- persisting events independently of consumers
-- allowing consumers to recover and reprocess messages
-- decoupling producers from downstream systems
-
-MongoDB persistence is handled via PersistentVolumeClaims, ensuring that:
-- data survives pod restarts
-- temporary failures do not result in data loss
-
-This combination ensures that transient failures do not break the overall system.
-
-## 4. NoSql
-NoSQL plays a central role in the JustGoUp project. The application produces event-oriented, hierarchical data, such as climbing sessions, boulder attempts, or user-specific metadata.
-
-MongoDB was chosen because:
-- it supports document-based storage, which maps naturally to sessions and events
-- the schema can evolve without costly migrations
-- nested data structures can be stored efficiently
-- write-heavy workloads are handled well
-
-Compared to a relational database, MongoDB reduces complexity for storing event data and enables flexible experimentation during development.
-
-## 5. Replication 
-Replication is used implicitly through the chosen technologies and can be extended further in production environments.
-
-In the current setup:
-- Kafka supports topic replication (configured minimally for local development)
-- MongoDB is deployed as a standalone instance locally but supports replica sets in production
-- Kubernetes allows multiple replicas of stateless services
-
-Although the local Minikube setup uses single-node configurations for simplicity, the architecture is replication-ready and can be extended without redesign.
-
-## 6. Costs
-The solution is designed to minimize costs during development while remaining cloud-ready.
-
-For local development:
-- Minikube runs entirely on the developer’s machine
-- No cloud resources are consumed
-- Costs are effectively zero
-
-In a cloud or OKD environment:
-- Costs scale with actual resource usage
-- Services can be scaled independently
-- Managed Kubernetes platforms reduce operational overhead
-
-Compared to a traditional non-cloud solution:
-- no dedicated hardware is required
-- scaling does not require upfront investment
-- infrastructure can be adjusted dynamically
-
-Overall, the cloud-native approach provides a strong cost advantage, especially for early-stage development and experimentation.
-
 # JustGoUp Infra - Developer Setup Guide
-This part explains how to set up the development environment to work on the JustGoUp infrastructure code and deploy services locally using Minikube and OpenTofu (Tofu).
 
 ## 1. Necessary Tooling
 
@@ -116,26 +20,10 @@ We use Minikube to run a local cluster without affecting your global `~/.kube/co
 minikube start -p justgoup --driver=docker
 ```
 
-### 2. Create the `justgoup` namespace:
-
-```sh
-kubectl --context=justgoup create namespace justgoup
-kubectl config set-context justgoup --namespace=justgoup
-```
-
-### 3. Verify the cluster is running:
+### 2. Verify the cluster is running:
 
 ```sh
 kubectl --context=justgoup get nodes
-```
-
-### 4. Ensure a dedicated kubeconfig entry exists:
-
-```sh
-kubectl config get-contexts
-# you should see something like:
-# CURRENT   NAME        CLUSTER     AUTHINFO    NAMESPACE
-# *         justgoup    justgoup    justgoup    justgoup
 ```
 
 ## 3. Configuring Your `.kube` Directory
@@ -198,11 +86,6 @@ kubectl config current-context
 
 Knative requires an ingress controller. For Minikube we use ingress-nginx.
 
-```sh
-minikube addons enable ingress -p justgoup
-minikube addons enable ingress-dns -p justgoup
-```
-
 Install the Knative operator:
 
 ```sh
@@ -212,7 +95,6 @@ kubectl apply -f https://github.com/knative/operator/releases/download/knative-v
 Install Knative Serving:
 
 ```sh
-kubectl create namespace knative-serving
 kubectl apply -f ./minikube/knative-serving.yaml
 
 # Verify Knative Serving components:
@@ -225,12 +107,13 @@ Expected running pods include:
 - activator
 - webhook
 
-### 2. Create a Persistent Volume Claim
-
-Kafka and NoqSQL need a PVC. For demo purposes they will share one:
+Install Knative Eventing:
 
 ```sh
-kubectl apply -f ./minikube/pvc.yaml
+kubectl apply -f ./minikube/knative-eventing.yaml
+
+# Verify Knative Eventing components:
+kubectl get pods -n knative-eventing
 ```
 
 ## 5. Get Mongo Express running
