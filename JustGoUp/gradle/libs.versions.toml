@@ -15,7 +15,7 @@ junit = "4.13.2"
 kotlin = "2.3.0"
 kotlin-serialization = "1.10.0"
 kotlin-datetime = "0.7.1-0.6.x-compat"
-sqldelight = "2.2.1"
+sqldelight = "2.3.2"
 koin = "4.1.1"
 
 [libraries]
