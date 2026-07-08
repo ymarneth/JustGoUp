@@ -13,7 +13,7 @@ jobs:
   build-android:
     uses: ./.github/workflows/android-build.yml
     with:
-      project-dir: "JustGoUp/composeApp"
+      project-dir: "JustGoUp/androidApp"
       version: ${{ github.ref_name }}
     secrets:
       ANDROID_KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_B64 }}
