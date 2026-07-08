@@ -12,7 +12,7 @@ plugins {
 kotlin {
     jvmToolchain(25)
 
-    androidLibrary {
+    android {
         namespace = "org.clc.justgoup.shared"
         compileSdk = libs.versions.android.compileSdk.get().toInt()
         minSdk = libs.versions.android.minSdk.get().toInt()
@@ -20,6 +20,8 @@ kotlin {
         compilerOptions {
             jvmTarget.set(JvmTarget.JVM_25)
         }
+
+        withHostTest {}
     }
 
     listOf(
