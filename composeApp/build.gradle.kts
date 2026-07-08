@@ -1,9 +1,8 @@
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
-import java.util.Properties
 
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
-    alias(libs.plugins.androidApplication)
+    alias(libs.plugins.androidKotlinMultiplatformLibrary)
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
     alias(libs.plugins.kotlin.serialization)
@@ -11,10 +10,18 @@ plugins {
 }
 
 kotlin {
-    androidTarget {
+    jvmToolchain(25)
+
+    android {
+        namespace = "org.clc.justgoup.shared"
+        compileSdk = libs.versions.android.compileSdk.get().toInt()
+        minSdk = libs.versions.android.minSdk.get().toInt()
+
         compilerOptions {
-            jvmTarget.set(JvmTarget.JVM_17)
+            jvmTarget.set(JvmTarget.JVM_25)
         }
+
+        withHostTest {}
     }
 
     listOf(
@@ -29,12 +36,7 @@ kotlin {
 
     sourceSets {
         androidMain.dependencies {
-            implementation(compose.preview)
-            implementation(libs.androidx.activity.compose)
             implementation(libs.sqldelight.android)
-            // --- Koin (Android) ---
-            implementation(libs.koin.android)
-            implementation(libs.koin.androidx.compose)
         }
         commonMain.dependencies {
             implementation(compose.runtime)
@@ -61,49 +63,6 @@ kotlin {
     }
 }
 
-android {
-    namespace = "org.clc.justgoup"
-    compileSdk = libs.versions.android.compileSdk.get().toInt()
-
-    defaultConfig {
-        applicationId = "org.clc.justgoup"
-        minSdk = libs.versions.android.minSdk.get().toInt()
-        targetSdk = libs.versions.android.targetSdk.get().toInt()
-        versionCode = System.getenv("VERSION_CODE")?.toInt() ?: 1
-        versionName = System.getenv("VERSION_NAME") ?: "1.0"
-    }
-    packaging {
-        resources {
-            excludes += "/META-INF/{AL2.0,LGPL2.1}"
-        }
-    }
-    signingConfigs {
-        create("ciRelease") {
-            val keystore = prop("ANDROID_KEYSTORE_PATH")
-            if (keystore != null) {
-                storeFile = file(keystore)
-                storePassword = prop("ANDROID_KEYSTORE_PASSWORD")
-                keyAlias = prop("ANDROID_KEY_ALIAS")
-                keyPassword = prop("ANDROID_KEY_PASSWORD")
-            }
-        }
-    }
-    buildTypes {
-        getByName("release") {
-            signingConfig = signingConfigs.getByName("ciRelease")
-            isMinifyEnabled = false
-        }
-    }
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_17
-        targetCompatibility = JavaVersion.VERSION_17
-    }
-}
-
-dependencies {
-    debugImplementation(compose.uiTooling)
-}
-
 sqldelight {
     databases {
         create("JustGoUpDatabase") {
@@ -118,16 +77,3 @@ composeCompiler {
     metricsDestination = layout.buildDirectory.dir("compose-metrics")
     reportsDestination = layout.buildDirectory.dir("compose-reports")
 }
-
-fun prop(name: String): String? {
-    System.getenv(name)?.let { return it }
-
-    val file = rootProject.file("local.properties")
-    if (!file.exists()) return null
-
-    val props = Properties()
-    file.inputStream().use { props.load(it) }
-
-    return props.getProperty(name)
-}
-

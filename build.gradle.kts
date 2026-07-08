@@ -1,0 +1,19 @@
+import com.github.benmanes.gradle.versions.updates.DependencyUpdatesTask
+
+plugins {
+    alias(libs.plugins.androidApplication) apply false
+    alias(libs.plugins.androidLibrary) apply false
+    alias(libs.plugins.composeMultiplatform) apply false
+    alias(libs.plugins.composeCompiler) apply false
+    alias(libs.plugins.kotlinMultiplatform) apply false
+    alias(libs.plugins.sqldelight) apply false
+    alias(libs.plugins.androidKotlinMultiplatformLibrary) apply false
+    alias(libs.plugins.benManesVersions)
+}
+
+tasks.named<DependencyUpdatesTask>("dependencyUpdates").configure {
+    rejectVersionIf {
+        val version = candidate.version.lowercase()
+        listOf("alpha", "beta", "rc", "cr", "m", "preview", "snapshot").any { version.contains(it) }
+    }
+}

@@ -1,22 +1,23 @@
 [versions]
-agp = "8.13.2"
+agp = "9.2.1"
 android-compileSdk = "36"
 android-minSdk = "24"
 android-targetSdk = "36"
-androidx-activity = "1.12.3"
-androidx-navigation = "2.9.1"
+androidx-activity = "1.13.0"
+androidx-navigation = "2.9.2"
 androidx-appcompat = "1.7.1"
 androidx-core = "1.17.0"
 androidx-espresso = "3.7.0"
-androidx-lifecycle = "2.9.6"
+androidx-lifecycle = "2.10.0"
 androidx-testExt = "1.3.0"
-composeMultiplatform = "1.10.0"
+composeMultiplatform = "1.11.1"
 junit = "4.13.2"
-kotlin = "2.3.0"
+kotlin = "2.4.0"
 kotlin-serialization = "1.10.0"
-kotlin-datetime = "0.7.1-0.6.x-compat"
-sqldelight = "2.2.1"
-koin = "4.1.1"
+kotlin-datetime = "0.8.0"
+sqldelight = "2.3.2"
+koin = "4.2.2"
+benManesVersions = "0.54.0"
 
 [libraries]
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
@@ -48,3 +49,5 @@ composeCompiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "k
 kotlinMultiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 sqldelight = { id = "app.cash.sqldelight", version.ref = "sqldelight" }
+benManesVersions = { id = "com.github.ben-manes.versions", version.ref = "benManesVersions" }
+androidKotlinMultiplatformLibrary = { id = "com.android.kotlin.multiplatform.library", version.ref = "agp" }

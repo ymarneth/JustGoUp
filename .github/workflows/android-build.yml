@@ -37,7 +37,7 @@ jobs:
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: 17
+          java-version: 25
 
       - name: Set up Android SDK
         uses: android-actions/setup-android@v2
@@ -78,7 +78,7 @@ jobs:
       - name: Rename APK with version
         run: |
           cd ${{ inputs.project-dir }}/build/outputs/apk/release
-          for f in composeApp-release*.apk; do
+          for f in androidApp-release*.apk; do
             mv "$f" "justgoup-release-${{ inputs.version }}.apk"
           done
 
