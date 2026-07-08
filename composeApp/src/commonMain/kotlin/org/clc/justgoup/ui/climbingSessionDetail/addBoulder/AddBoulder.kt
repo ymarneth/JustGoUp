@@ -18,6 +18,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -34,6 +35,7 @@ import org.clc.justgoup.boulder.HoldColor
 import org.clc.justgoup.boulder.VGrade
 import org.clc.justgoup.boulder.toColor
 import org.clc.justgoup.di.provideClimbingSessionRepository
+import org.clc.justgoup.di.provideGradingSystemPreference
 import org.clc.justgoup.ui.theme.BoulderTheme
 import org.clc.justgoup.ui.theme.components.BoulderButton
 import org.clc.justgoup.ui.theme.components.BoulderTextField
@@ -45,11 +47,12 @@ fun AddBoulder(
     onOpenSession: (String) -> Unit, sessionId: String
 ) {
     val repository = provideClimbingSessionRepository()
-    val viewModel = remember { AddBoulderViewModel(repository, sessionId) }
+    val gradingSystemPreference = provideGradingSystemPreference()
+    val viewModel = remember { AddBoulderViewModel(repository, sessionId, gradingSystemPreference) }
 
     val scrollState = rememberScrollState()
 
-    var gradingSystem by remember { mutableStateOf(GradingSystem.FRENCH) }
+    val gradingSystem by viewModel.gradingSystem.collectAsState()
     var gradeNumber by remember { mutableStateOf(6) }
     var gradeLetter by remember { mutableStateOf<Char?>('a') }
     var gradePlus by remember { mutableStateOf(false) }
@@ -91,7 +94,7 @@ fun AddBoulder(
                 label = "French",
                 value = GradingSystem.FRENCH,
                 selectedValue = gradingSystem,
-                onSelect = { gradingSystem = GradingSystem.FRENCH },
+                onSelect = { viewModel.updateGradingSystem(GradingSystem.FRENCH) },
                 modifier = Modifier.weight(1f)
             )
             ChipDivider()
@@ -99,7 +102,7 @@ fun AddBoulder(
                 label = "V-Scale",
                 value = GradingSystem.V_SCALE,
                 selectedValue = gradingSystem,
-                onSelect = { gradingSystem = GradingSystem.V_SCALE },
+                onSelect = { viewModel.updateGradingSystem(GradingSystem.V_SCALE) },
                 modifier = Modifier.weight(1f)
             )
         }
