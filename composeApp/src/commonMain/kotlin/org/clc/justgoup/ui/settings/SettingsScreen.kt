@@ -60,7 +60,7 @@ fun SettingsScreen(
             scope.launch {
                 viewModel.importFromJson(content)
                     .onSuccess { count -> statusMessage = "Imported $count new session(s)" }
-                    .onFailure { statusMessage = "Import failed: invalid file" }
+                    .onFailure { statusMessage = "Import failed: ${it.message ?: "invalid file"}" }
             }
         }
     }

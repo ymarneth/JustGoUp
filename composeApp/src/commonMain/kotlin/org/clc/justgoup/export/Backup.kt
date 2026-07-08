@@ -30,8 +30,11 @@ data class SessionBackup(
     val boulders: List<BoulderBackup>
 )
 
+const val BACKUP_FORMAT_VERSION = 1
+
 @Serializable
 data class BackupPayload(
+    val version: Int = BACKUP_FORMAT_VERSION,
     val exportedAt: String,
     val sessions: List<SessionBackup>
 )
