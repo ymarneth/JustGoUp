@@ -9,7 +9,7 @@ plugins {
     alias(libs.plugins.composeCompiler) apply false
     alias(libs.plugins.kotlinMultiplatform) apply false
     alias(libs.plugins.sqldelight) apply false
-    id("com.github.ben-manes.versions") version "0.54.0"
+    alias(libs.plugins.benManesVersions)
 }
 
 tasks.named<DependencyUpdatesTask>("dependencyUpdates").configure {
