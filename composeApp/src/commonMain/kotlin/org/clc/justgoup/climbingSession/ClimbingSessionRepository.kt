@@ -106,7 +106,7 @@ internal class ClimbingSessionRepositoryImpl(
 
     override suspend fun restoreSessions(sessions: List<ClimbingSession>): Int {
         val existingIds = database.findAllSessions().map { it.id }.toSet()
-        val newSessions = sessions.filterNot { it.id in existingIds }
+        val newSessions = sessions.excludingExistingIds(existingIds)
 
         newSessions.forEach { session ->
             database.insertSession(
@@ -121,6 +121,9 @@ internal class ClimbingSessionRepositoryImpl(
         return newSessions.size
     }
 }
+
+internal fun List<ClimbingSession>.excludingExistingIds(existingIds: Set<String>): List<ClimbingSession> =
+    filterNot { it.id in existingIds }
 
 data class StartClimbingSessionCommand(
     val location: String,
