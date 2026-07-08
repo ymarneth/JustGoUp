@@ -17,6 +17,7 @@ import org.clc.justgoup.ui.climbingSessionDetail.addBoulder.AddBoulder
 import org.clc.justgoup.ui.header.HeaderScreen
 import org.clc.justgoup.ui.home.Home
 import org.clc.justgoup.ui.home.addSession.AddSession
+import org.clc.justgoup.ui.settings.SettingsScreen
 import org.clc.justgoup.ui.theme.BoulderTheme
 import org.clc.justgoup.ui.theme.ThemeMode
 
@@ -33,6 +34,9 @@ object AddSession
 @Serializable
 data class AddBoulder(val sessionId: String)
 
+@Serializable
+object Settings
+
 // ---------- NAVIGATION HOST ----------
 @Composable
 fun AppNavHost(
@@ -48,8 +52,7 @@ fun AppNavHost(
             .padding(horizontal = BoulderTheme.spacing.medium.dp)
     ) {
         HeaderScreen(
-            currentTheme = currentTheme,
-            onChangeTheme = onChangeTheme
+            onOpenSettings = { nav.navigate(Settings) }
         )
 
         NavHost(navController = nav, startDestination = Home) {
@@ -88,6 +91,14 @@ fun AppNavHost(
                         }
                     },
                     sessionId = args.sessionId
+                )
+            }
+
+            composable<Settings> {
+                SettingsScreen(
+                    currentTheme = currentTheme,
+                    onChangeTheme = onChangeTheme,
+                    onBack = { nav.popBackStack() }
                 )
             }
         }
