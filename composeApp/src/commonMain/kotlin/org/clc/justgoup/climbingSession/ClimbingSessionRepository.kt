@@ -16,6 +16,8 @@ interface ClimbingSessionRepository {
     suspend fun addBoulderToSession(sessionId: String, command: CreateBoulderCommand)
     suspend fun updateBoulderInSession(boulderId: String, command: UpdateBoulderCommand)
     suspend fun deleteBoulderFromSession(boulderId: String)
+    suspend fun exportAllSessions(): List<ClimbingSession>
+    suspend fun restoreSessions(sessions: List<ClimbingSession>): Int
 }
 
 internal class ClimbingSessionRepositoryImpl(
@@ -98,7 +100,30 @@ internal class ClimbingSessionRepositoryImpl(
     override suspend fun deleteBoulderFromSession(boulderId: String) {
         database.deleteBoulder(boulderId)
     }
+
+    override suspend fun exportAllSessions(): List<ClimbingSession> =
+        database.findAllSessions()
+
+    override suspend fun restoreSessions(sessions: List<ClimbingSession>): Int {
+        val existingIds = database.findAllSessions().map { it.id }.toSet()
+        val newSessions = sessions.excludingExistingIds(existingIds)
+
+        newSessions.forEach { session ->
+            database.insertSession(
+                id = session.id,
+                location = session.location,
+                startTime = session.startTime,
+                notes = session.notes
+            )
+            session.boulders.forEach { boulder -> database.insertBoulder(session.id, boulder) }
+        }
+
+        return newSessions.size
+    }
 }
+
+internal fun List<ClimbingSession>.excludingExistingIds(existingIds: Set<String>): List<ClimbingSession> =
+    filterNot { it.id in existingIds }
 
 data class StartClimbingSessionCommand(
     val location: String,

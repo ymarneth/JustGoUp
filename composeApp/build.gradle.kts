@@ -37,6 +37,7 @@ kotlin {
     sourceSets {
         androidMain.dependencies {
             implementation(libs.sqldelight.android)
+            implementation(libs.androidx.activity.compose)
         }
         commonMain.dependencies {
             implementation(compose.runtime)
@@ -50,6 +51,7 @@ kotlin {
             implementation(libs.androidx.lifecycle.runtimeCompose)
             implementation(libs.androidx.navigation.compose)
             implementation(libs.kotlinx.datetime)
+            implementation(libs.kotlinx.serialization.json)
             implementation(libs.sqldelight.runtime)
             implementation(libs.sqldelight.coroutines)
             // --- Koin (common) ---
