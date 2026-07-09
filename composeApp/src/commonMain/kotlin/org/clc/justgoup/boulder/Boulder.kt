@@ -62,9 +62,32 @@ data class VGrade(
     }
 }
 
+// Ordered as a rainbow (warm to cool) followed by neutrals light to dark, so a picker
+// showing them in declaration order reads nicely rather than in arbitrary storage order.
 enum class HoldColor {
-    RED, PINK, BLUE, GREEN, TEAL, YELLOW, ORANGE, PURPLE, BLACK, WHITE, GREY
+    RED, ORANGE, YELLOW, GREEN, TEAL, BLUE, PURPLE, PINK, WHITE, GREY, BLACK
 }
+
+private const val FRENCH_MIN_NUMBER = 3
+private const val FRENCH_MAX_NUMBER = 9
+private val FRENCH_LETTERS = listOf('a', 'b', 'c')
+
+/**
+ * Every French number+letter combination in order, e.g. 3a, 3b, 3c, 4a, ... 9c.
+ * The `+` modifier is intentionally not part of this sequence -- it's a separate,
+ * non-standard toggle applied independently of the base grade.
+ */
+fun frenchGradeSequence(): List<FrenchGrade> =
+    (FRENCH_MIN_NUMBER..FRENCH_MAX_NUMBER).flatMap { number ->
+        FRENCH_LETTERS.map { letter -> FrenchGrade(number = number, letter = letter) }
+    }
+
+private const val V_MIN = 0
+private const val V_MAX = 10
+
+/** VB, then V0..V10 in order. The `plus` flag is applied independently of this sequence. */
+fun vGradeSequence(): List<VGrade> =
+    listOf(VGrade(value = V_MIN, beginner = true)) + (V_MIN..V_MAX).map { VGrade(value = it) }
 
 fun Grade.toDisplayString(): String = when (this) {
     Grade.None -> "-"

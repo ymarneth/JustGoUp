@@ -3,39 +3,55 @@ package org.clc.justgoup.ui.climbingSessionDetail.addBoulder
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.launch
 import org.clc.justgoup.boulder.FrenchGrade
 import org.clc.justgoup.boulder.Grade
 import org.clc.justgoup.boulder.GradingSystem
 import org.clc.justgoup.boulder.HoldColor
 import org.clc.justgoup.boulder.VGrade
+import org.clc.justgoup.boulder.frenchGradeSequence
 import org.clc.justgoup.boulder.toColor
+import org.clc.justgoup.boulder.vGradeSequence
 import org.clc.justgoup.di.provideClimbingSessionRepository
 import org.clc.justgoup.di.provideGradingSystemPreference
+import org.clc.justgoup.di.provideLastGradePreference
 import org.clc.justgoup.ui.theme.BoulderTheme
 import org.clc.justgoup.ui.theme.components.BoulderButton
 import org.clc.justgoup.ui.theme.components.BoulderTextField
@@ -48,23 +64,29 @@ fun AddBoulder(
 ) {
     val repository = provideClimbingSessionRepository()
     val gradingSystemPreference = provideGradingSystemPreference()
-    val viewModel = remember { AddBoulderViewModel(repository, sessionId, gradingSystemPreference) }
+    val lastGradePreference = provideLastGradePreference()
+    val viewModel = remember {
+        AddBoulderViewModel(repository, sessionId, gradingSystemPreference, lastGradePreference)
+    }
 
     val scrollState = rememberScrollState()
 
     val gradingSystem by viewModel.gradingSystem.collectAsState()
-    var gradeNumber by remember { mutableStateOf(6) }
-    var gradeLetter by remember { mutableStateOf<Char?>('a') }
-    var gradePlus by remember { mutableStateOf(false) }
-    var vGradeValue by remember { mutableStateOf(0) }
-    var vGradePlus by remember { mutableStateOf(false) }
-    var vGradeBeginner by remember { mutableStateOf(false) }
+    val initialFrenchGrade = remember { viewModel.lastFrenchGrade() }
+    val initialVGrade = remember { viewModel.lastVGrade() }
+    var gradeNumber by remember { mutableStateOf(initialFrenchGrade.number) }
+    var gradeLetter by remember { mutableStateOf(initialFrenchGrade.letter) }
+    var gradePlus by remember { mutableStateOf(initialFrenchGrade.modifier == FrenchGrade.Modifier.Plus) }
+    var vGradeValue by remember { mutableStateOf(initialVGrade.value) }
+    var vGradePlus by remember { mutableStateOf(initialVGrade.plus) }
+    var vGradeBeginner by remember { mutableStateOf(initialVGrade.beginner) }
+    var showAllGrades by remember { mutableStateOf(false) }
 
     var attempts by remember { mutableStateOf(1) }
     var sent by remember { mutableStateOf(false) }
     var flash by remember { mutableStateOf(false) }
     var repeated by remember { mutableStateOf(false) }
-    var color by remember { mutableStateOf<HoldColor?>(null) }
+    var color by remember { mutableStateOf<HoldColor?>(HoldColor.entries[HoldColor.entries.size / 2]) }
     var notes by remember { mutableStateOf("") }
 
     Column(modifier = Modifier.fillMaxWidth().verticalScroll(scrollState)) {
@@ -94,7 +116,10 @@ fun AddBoulder(
                 label = "French",
                 value = GradingSystem.FRENCH,
                 selectedValue = gradingSystem,
-                onSelect = { viewModel.updateGradingSystem(GradingSystem.FRENCH) },
+                onSelect = {
+                    viewModel.updateGradingSystem(GradingSystem.FRENCH)
+                    showAllGrades = false
+                },
                 modifier = Modifier.weight(1f)
             )
             ChipDivider()
@@ -102,15 +127,49 @@ fun AddBoulder(
                 label = "V-Scale",
                 value = GradingSystem.V_SCALE,
                 selectedValue = gradingSystem,
-                onSelect = { viewModel.updateGradingSystem(GradingSystem.V_SCALE) },
+                onSelect = {
+                    viewModel.updateGradingSystem(GradingSystem.V_SCALE)
+                    showAllGrades = false
+                },
                 modifier = Modifier.weight(1f)
             )
         }
 
         Spacer(Modifier.height(BoulderTheme.spacing.medium.dp))
 
-        when (gradingSystem) {
-            GradingSystem.FRENCH -> FrenchGradePicker(
+        when {
+            gradingSystem == GradingSystem.FRENCH && !showAllGrades -> {
+                val selected = FrenchGrade(number = gradeNumber, letter = gradeLetter)
+
+                GradeCarousel(
+                    items = remember { frenchGradeSequence() },
+                    selected = selected,
+                    onSelect = {
+                        gradeNumber = it.number
+                        gradeLetter = it.letter
+                    }
+                ) { grade, isSelected ->
+                    GradeChipContent(
+                        label = if (grade == selected && gradePlus) {
+                            grade.copy(modifier = FrenchGrade.Modifier.Plus).toString()
+                        } else {
+                            grade.toString()
+                        },
+                        isSelected = isSelected
+                    )
+                }
+
+                Spacer(Modifier.height(BoulderTheme.spacing.small.dp))
+
+                SelectableChip(
+                    label = "+",
+                    value = true,
+                    selectedValue = gradePlus,
+                    onSelect = { gradePlus = !gradePlus }
+                )
+            }
+
+            gradingSystem == GradingSystem.FRENCH -> FrenchGradePicker(
                 number = gradeNumber,
                 letter = gradeLetter,
                 plus = gradePlus,
@@ -118,7 +177,39 @@ fun AddBoulder(
                 onLetterChange = { gradeLetter = it },
                 onPlusChange = { gradePlus = it })
 
-            GradingSystem.V_SCALE -> VScalePicker(
+            gradingSystem == GradingSystem.V_SCALE && !showAllGrades -> {
+                val selected = VGrade(value = vGradeValue, beginner = vGradeBeginner)
+
+                GradeCarousel(
+                    items = remember { vGradeSequence() },
+                    selected = selected,
+                    onSelect = {
+                        vGradeValue = it.value
+                        vGradeBeginner = it.beginner
+                    }
+                ) { grade, isSelected ->
+                    GradeChipContent(
+                        label = if (grade == selected && vGradePlus) {
+                            grade.copy(plus = true).toString()
+                        } else {
+                            grade.toString()
+                        },
+                        isSelected = isSelected
+                    )
+                }
+
+                Spacer(Modifier.height(BoulderTheme.spacing.small.dp))
+
+                SelectableChip(
+                    label = "+",
+                    value = true,
+                    selectedValue = vGradePlus && !vGradeBeginner,
+                    enabled = !vGradeBeginner,
+                    onSelect = { vGradePlus = !vGradePlus }
+                )
+            }
+
+            else -> VScalePicker(
                 value = vGradeValue,
                 plus = vGradePlus,
                 beginner = vGradeBeginner,
@@ -127,6 +218,17 @@ fun AddBoulder(
                 onBeginnerChange = { vGradeBeginner = it }
             )
         }
+
+        Spacer(Modifier.height(BoulderTheme.spacing.small.dp))
+
+        Text(
+            text = if (showAllGrades) "Show less" else "Show all",
+            style = BoulderTheme.typography.body,
+            color = BoulderTheme.colors.textSecondary,
+            modifier = Modifier
+                .align(Alignment.End)
+                .clickable { showAllGrades = !showAllGrades }
+        )
 
         Spacer(Modifier.height(BoulderTheme.spacing.large.dp))
 
@@ -142,9 +244,7 @@ fun AddBoulder(
             value = attempts,
             onChange = {
                 attempts = it
-                if (it > 1) {
-                    flash = false
-                }
+                flash = sent && it == 1
             })
 
         Spacer(Modifier.height(BoulderTheme.spacing.large.dp))
@@ -244,28 +344,24 @@ fun HoldColorPicker(
     selected: HoldColor?,
     onSelected: (HoldColor?) -> Unit
 ) {
-    val colors = HoldColor.entries.toTypedArray()
-
-    FlowRow(
-        horizontalArrangement = Arrangement.spacedBy(BoulderTheme.spacing.small.dp),
-        verticalArrangement = Arrangement.spacedBy(BoulderTheme.spacing.small.dp)
-    ) {
-        colors.forEach { color ->
-            val isSelected = selected == color
-
-            Box(
-                modifier = Modifier
-                    .size(40.dp)
-                    .clip(CircleShape)
-                    .background(color.toColor())
-                    .border(
-                        width = if (isSelected) 3.dp else 1.dp,
-                        color = if (isSelected) BoulderTheme.colors.primary
-                        else BoulderTheme.colors.textSecondary,
-                        shape = CircleShape
-                    )
-                    .clickable { onSelected(color) })
-        }
+    GradeCarousel(
+        items = HoldColor.entries,
+        selected = selected,
+        onSelect = onSelected,
+        itemWidth = 56.dp,
+        itemHeight = 56.dp
+    ) { color, isSelected ->
+        Box(
+            modifier = Modifier
+                .size(40.dp)
+                .clip(CircleShape)
+                .background(color?.toColor() ?: BoulderTheme.colors.surface)
+                .border(
+                    width = if (isSelected) 3.dp else 1.dp,
+                    color = if (isSelected) BoulderTheme.colors.primary else BoulderTheme.colors.textSecondary,
+                    shape = CircleShape
+                )
+        )
     }
 }
 
@@ -313,8 +409,9 @@ fun SentFlashChips(
             value = true,
             selectedValue = sent,
             onSelect = {
-                onSentChange(!sent)
-                if (sent) onFlashChange(false)
+                val newSent = !sent
+                onSentChange(newSent)
+                onFlashChange(newSent && attempts == 1)
             }
         )
 
@@ -331,6 +428,116 @@ fun SentFlashChips(
             value = true,
             selectedValue = repeated,
             onSelect = { onRepeatedChange(!repeated) },
+        )
+    }
+}
+
+private const val CAROUSEL_JUMP_AMOUNT = 3
+
+/**
+ * A horizontally swipeable, snap-to-center picker, with < / > buttons that jump by
+ * [CAROUSEL_JUMP_AMOUNT] items. Whichever item is centered is always the selection --
+ * live, continuously, while swiping or animating, not just once a gesture settles.
+ * [items] should be a small, finite, already-ordered sequence (e.g. every French
+ * number+letter combination).
+ */
+@Composable
+fun <T> GradeCarousel(
+    items: List<T>,
+    selected: T,
+    onSelect: (T) -> Unit,
+    modifier: Modifier = Modifier,
+    itemWidth: Dp = 72.dp,
+    itemHeight: Dp = 48.dp,
+    itemContent: @Composable (item: T, isSelected: Boolean) -> Unit
+) {
+    val selectedIndex = remember(items) { items.indexOf(selected).coerceAtLeast(0) }
+    val listState = rememberLazyListState(initialFirstVisibleItemIndex = selectedIndex)
+    val flingBehavior = rememberSnapFlingBehavior(listState)
+    val coroutineScope = rememberCoroutineScope()
+
+    LaunchedEffect(listState) {
+        snapshotFlow {
+            val layoutInfo = listState.layoutInfo
+            val viewportCenter = (layoutInfo.viewportStartOffset + layoutInfo.viewportEndOffset) / 2
+            layoutInfo.visibleItemsInfo.minByOrNull { info ->
+                kotlin.math.abs((info.offset + info.size / 2) - viewportCenter)
+            }?.index
+        }.collect { centeredIndex ->
+            if (centeredIndex != null) {
+                items.getOrNull(centeredIndex)?.let(onSelect)
+            }
+        }
+    }
+
+    fun jump(amount: Int) {
+        val currentIndex = items.indexOf(selected).coerceAtLeast(0)
+        val targetIndex = (currentIndex + amount).coerceIn(0, items.lastIndex)
+        coroutineScope.launch { listState.animateScrollToItem(targetIndex) }
+    }
+
+    val currentIndex = items.indexOf(selected).coerceAtLeast(0)
+
+    Row(
+        modifier = modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(BoulderTheme.spacing.small.dp)
+    ) {
+        BoulderButton(
+            text = "<",
+            enabled = currentIndex > 0,
+            onClick = { jump(-CAROUSEL_JUMP_AMOUNT) },
+            modifier = Modifier.width(48.dp)
+        )
+
+        BoxWithConstraints(modifier = Modifier.weight(1f)) {
+            val sidePadding = ((maxWidth - itemWidth) / 2).coerceAtLeast(0.dp)
+
+            LazyRow(
+                state = listState,
+                flingBehavior = flingBehavior,
+                contentPadding = PaddingValues(horizontal = sidePadding),
+                horizontalArrangement = Arrangement.spacedBy(BoulderTheme.spacing.small.dp)
+            ) {
+                itemsIndexed(items) { index, item ->
+                    Box(
+                        modifier = Modifier
+                            .width(itemWidth)
+                            .height(itemHeight)
+                            .clickable {
+                                coroutineScope.launch { listState.animateScrollToItem(index) }
+                            },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        itemContent(item, item == selected)
+                    }
+                }
+            }
+        }
+
+        BoulderButton(
+            text = ">",
+            enabled = currentIndex < items.lastIndex,
+            onClick = { jump(CAROUSEL_JUMP_AMOUNT) },
+            modifier = Modifier.width(48.dp)
+        )
+    }
+}
+
+/** The rounded, primary/surface-filled chip used for text-based grade carousel items. */
+@Composable
+fun GradeChipContent(label: String, isSelected: Boolean) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .clip(RoundedCornerShape(8.dp))
+            .background(if (isSelected) BoulderTheme.colors.primary else BoulderTheme.colors.surface),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = label,
+            style = BoulderTheme.typography.titleMedium,
+            color = if (isSelected) BoulderTheme.colors.textPrimary else BoulderTheme.colors.textSecondary
         )
     }
 }
