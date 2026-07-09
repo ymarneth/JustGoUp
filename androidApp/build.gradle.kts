@@ -51,11 +51,11 @@ kotlin {
 
 dependencies {
     implementation(projects.composeApp)
-    implementation(compose.runtime)
-    implementation(compose.preview)
+    implementation(libs.compose.runtime)
+    implementation(libs.compose.ui.tooling.preview)
     implementation(libs.androidx.activity.compose)
     implementation(libs.koin.android)
-    debugImplementation(compose.uiTooling)
+    debugImplementation(libs.compose.ui.tooling)
 }
 
 fun prop(name: String): String? {
