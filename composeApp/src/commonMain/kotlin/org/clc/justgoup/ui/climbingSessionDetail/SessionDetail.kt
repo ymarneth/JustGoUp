@@ -2,7 +2,6 @@ package org.clc.justgoup.ui.climbingSessionDetail
 
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
@@ -11,26 +10,22 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import org.clc.justgoup.di.provideClimbingSessionRepository
 import org.clc.justgoup.ui.theme.BoulderTheme
 import org.clc.justgoup.ui.theme.components.BoulderButton
 import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.unit.Dp
+import org.clc.justgoup.ui.theme.components.ConfirmationCard
 import org.clc.justgoup.ui.theme.components.SwipeItem
 
 @Composable
@@ -77,6 +72,7 @@ fun SessionDetailScreen(
 
                     if (isPending) {
                         ConfirmationCard(
+                            message = "Delete this boulder?",
                             height = cardHeight.value,
                             onCancel = { pendingDeleteId.value = null },
                             onConfirm = {
@@ -107,51 +103,6 @@ fun SessionDetailScreen(
                         }
                     }
                 }
-            }
-        }
-    }
-}
-
-@Composable
-fun ConfirmationCard(
-    onCancel: () -> Unit,
-    onConfirm: () -> Unit,
-    height: Dp = Dp.Unspecified,
-    modifier: Modifier = Modifier
-) {
-    Box(
-        modifier = modifier
-            .fillMaxWidth()
-            .widthIn(max = 400.dp)
-            .height(height)
-    ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center,
-            modifier = Modifier.fillMaxSize()
-        ) {
-            Text(
-                text = "Delete this boulder?",
-                style = BoulderTheme.typography.body,
-                color = BoulderTheme.colors.textPrimary
-            )
-
-            Spacer(modifier = Modifier.height(BoulderTheme.spacing.medium.dp))
-
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(BoulderTheme.spacing.small.dp),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                BoulderButton(
-                    text = "Cancel",
-                    onClick = onCancel,
-                    modifier = Modifier.weight(1f)
-                )
-                BoulderButton(
-                    text = "Delete",
-                    onClick = onConfirm,
-                    modifier = Modifier.weight(1f)
-                )
             }
         }
     }

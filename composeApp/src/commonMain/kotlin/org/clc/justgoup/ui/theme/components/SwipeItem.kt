@@ -19,6 +19,7 @@ import androidx.compose.ui.input.pointer.util.VelocityTracker
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlin.math.abs
 import kotlin.math.roundToInt
@@ -35,14 +36,15 @@ fun SwipeItem(
     val thresholdPx = with(density) { 96.dp.toPx() }
     val flingVelocityPx = with(density) { 800.dp.toPx() }
     val flyOutPx = with(density) { 600.dp.toPx() }
+    val settleJob = remember { mutableStateOf<Job?>(null) }
 
     Box(
         modifier = Modifier.pointerInput(Unit) {
             awaitEachGesture {
-                offsetX.value = 0f
                 val velocityTracker = VelocityTracker()
 
-                val down = awaitFirstDown()
+                val down = awaitFirstDown(requireUnconsumed = false)
+                settleJob.value?.cancel()
                 velocityTracker.addPosition(down.uptimeMillis, down.position)
                 var isHorizontal = false
 
@@ -63,7 +65,7 @@ fun SwipeItem(
                     val isSwipe = abs(offsetX.value) > thresholdPx || isFling
                     val isRight = if (isFling) velocity > 0 else offsetX.value > 0
 
-                    scope.launch {
+                    settleJob.value = scope.launch {
                         val anim = Animatable(offsetX.value)
                         if (isSwipe) {
                             anim.animateTo(

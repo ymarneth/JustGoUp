@@ -20,4 +20,10 @@ class HomeViewModel(
             _recentSessions.value = climbingSessionRepository.findRecentSessions()
         }
     }
+
+    fun deleteSession(id: String) {
+        viewModelScope.launch {
+            climbingSessionRepository.deleteSession(id)
+        }
+    }
 }
