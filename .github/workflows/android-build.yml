@@ -66,8 +66,13 @@ jobs:
           path: |
             ~/.gradle/caches
             ~/.gradle/wrapper
-          key: gradle-${{ hashFiles('${{ inputs.project-dir }}/gradle/wrapper/gradle-wrapper.properties') }}
+          key: gradle-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties') }}
           restore-keys: gradle-
+
+      - name: Run tests
+        run: |
+          chmod +x ./gradlew
+          ./gradlew :composeApp:allTests
 
       - name: Build Android Release
         run: |
