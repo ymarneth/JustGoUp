@@ -15,12 +15,18 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import org.clc.justgoup.di.provideClimbingSessionRepository
 import org.clc.justgoup.ui.theme.BoulderTheme
 import org.clc.justgoup.ui.theme.components.BoulderButton
+import org.clc.justgoup.ui.theme.components.ConfirmationCard
+import org.clc.justgoup.ui.theme.components.SwipeItem
 
 @Composable
 fun Home(
@@ -31,6 +37,10 @@ fun Home(
     val viewModel = remember { HomeViewModel(repository) }
 
     val recentSessions by viewModel.recentSessions.collectAsState(initial = emptyList())
+
+    val localSessions = remember(recentSessions) { recentSessions.toMutableStateList() }
+    val pendingDeleteId = remember { mutableStateOf<String?>(null) }
+    val density = LocalDensity.current
 
     Column {
         // ---- START NEW SESSION ----
@@ -61,13 +71,40 @@ fun Home(
             verticalArrangement = Arrangement.spacedBy(BoulderTheme.spacing.medium.dp),
             contentPadding = PaddingValues(bottom = BoulderTheme.spacing.extraLarge.dp)
         ) {
-            items(recentSessions) { session ->
-                SessionCard(
-                    session = session,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable { onOpenSession(session.id) }
-                )
+            items(
+                items = localSessions,
+                key = { session -> session.id }
+            ) { session ->
+                val isPending = pendingDeleteId.value == session.id
+                val cardHeight = remember { mutableStateOf(0.dp) }
+
+                if (isPending) {
+                    ConfirmationCard(
+                        message = "Delete this session?",
+                        height = cardHeight.value,
+                        onCancel = { pendingDeleteId.value = null },
+                        onConfirm = {
+                            pendingDeleteId.value = null
+                            localSessions.remove(session)
+                            viewModel.deleteSession(session.id)
+                        }
+                    )
+                } else {
+                    SwipeItem(
+                        onSwipeLeft = { pendingDeleteId.value = session.id },
+                        onSwipeRight = { pendingDeleteId.value = session.id }
+                    ) {
+                        SessionCard(
+                            session = session,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { onOpenSession(session.id) }
+                                .onGloballyPositioned { coordinates ->
+                                    cardHeight.value = with(density) { coordinates.size.height.toDp() }
+                                }
+                        )
+                    }
+                }
             }
         }
     }
