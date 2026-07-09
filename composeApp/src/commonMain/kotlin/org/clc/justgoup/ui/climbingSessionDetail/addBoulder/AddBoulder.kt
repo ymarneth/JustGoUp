@@ -33,9 +33,12 @@ import org.clc.justgoup.boulder.Grade
 import org.clc.justgoup.boulder.GradingSystem
 import org.clc.justgoup.boulder.HoldColor
 import org.clc.justgoup.boulder.VGrade
+import org.clc.justgoup.boulder.stepDown
+import org.clc.justgoup.boulder.stepUp
 import org.clc.justgoup.boulder.toColor
 import org.clc.justgoup.di.provideClimbingSessionRepository
 import org.clc.justgoup.di.provideGradingSystemPreference
+import org.clc.justgoup.di.provideLastGradePreference
 import org.clc.justgoup.ui.theme.BoulderTheme
 import org.clc.justgoup.ui.theme.components.BoulderButton
 import org.clc.justgoup.ui.theme.components.BoulderTextField
@@ -48,17 +51,23 @@ fun AddBoulder(
 ) {
     val repository = provideClimbingSessionRepository()
     val gradingSystemPreference = provideGradingSystemPreference()
-    val viewModel = remember { AddBoulderViewModel(repository, sessionId, gradingSystemPreference) }
+    val lastGradePreference = provideLastGradePreference()
+    val viewModel = remember {
+        AddBoulderViewModel(repository, sessionId, gradingSystemPreference, lastGradePreference)
+    }
 
     val scrollState = rememberScrollState()
 
     val gradingSystem by viewModel.gradingSystem.collectAsState()
-    var gradeNumber by remember { mutableStateOf(6) }
-    var gradeLetter by remember { mutableStateOf<Char?>('a') }
-    var gradePlus by remember { mutableStateOf(false) }
-    var vGradeValue by remember { mutableStateOf(0) }
-    var vGradePlus by remember { mutableStateOf(false) }
-    var vGradeBeginner by remember { mutableStateOf(false) }
+    val initialFrenchGrade = remember { viewModel.lastFrenchGrade() }
+    val initialVGrade = remember { viewModel.lastVGrade() }
+    var gradeNumber by remember { mutableStateOf(initialFrenchGrade.number) }
+    var gradeLetter by remember { mutableStateOf(initialFrenchGrade.letter) }
+    var gradePlus by remember { mutableStateOf(initialFrenchGrade.modifier == FrenchGrade.Modifier.Plus) }
+    var vGradeValue by remember { mutableStateOf(initialVGrade.value) }
+    var vGradePlus by remember { mutableStateOf(initialVGrade.plus) }
+    var vGradeBeginner by remember { mutableStateOf(initialVGrade.beginner) }
+    var showAllGrades by remember { mutableStateOf(false) }
 
     var attempts by remember { mutableStateOf(1) }
     var sent by remember { mutableStateOf(false) }
@@ -94,7 +103,10 @@ fun AddBoulder(
                 label = "French",
                 value = GradingSystem.FRENCH,
                 selectedValue = gradingSystem,
-                onSelect = { viewModel.updateGradingSystem(GradingSystem.FRENCH) },
+                onSelect = {
+                    viewModel.updateGradingSystem(GradingSystem.FRENCH)
+                    showAllGrades = false
+                },
                 modifier = Modifier.weight(1f)
             )
             ChipDivider()
@@ -102,15 +114,28 @@ fun AddBoulder(
                 label = "V-Scale",
                 value = GradingSystem.V_SCALE,
                 selectedValue = gradingSystem,
-                onSelect = { viewModel.updateGradingSystem(GradingSystem.V_SCALE) },
+                onSelect = {
+                    viewModel.updateGradingSystem(GradingSystem.V_SCALE)
+                    showAllGrades = false
+                },
                 modifier = Modifier.weight(1f)
             )
         }
 
         Spacer(Modifier.height(BoulderTheme.spacing.medium.dp))
 
-        when (gradingSystem) {
-            GradingSystem.FRENCH -> FrenchGradePicker(
+        when {
+            gradingSystem == GradingSystem.FRENCH && !showAllGrades -> FrenchQuickGradePicker(
+                current = FrenchGrade(number = gradeNumber, letter = gradeLetter, modifier = if (gradePlus) FrenchGrade.Modifier.Plus else null),
+                onSelect = {
+                    gradeNumber = it.number
+                    gradeLetter = it.letter
+                    gradePlus = it.modifier == FrenchGrade.Modifier.Plus
+                },
+                onShowAll = { showAllGrades = true }
+            )
+
+            gradingSystem == GradingSystem.FRENCH -> FrenchGradePicker(
                 number = gradeNumber,
                 letter = gradeLetter,
                 plus = gradePlus,
@@ -118,13 +143,33 @@ fun AddBoulder(
                 onLetterChange = { gradeLetter = it },
                 onPlusChange = { gradePlus = it })
 
-            GradingSystem.V_SCALE -> VScalePicker(
+            gradingSystem == GradingSystem.V_SCALE && !showAllGrades -> VScaleQuickGradePicker(
+                current = VGrade(value = vGradeValue, beginner = vGradeBeginner, plus = vGradePlus),
+                onSelect = {
+                    vGradeValue = it.value
+                    vGradeBeginner = it.beginner
+                },
+                onShowAll = { showAllGrades = true }
+            )
+
+            else -> VScalePicker(
                 value = vGradeValue,
                 plus = vGradePlus,
                 beginner = vGradeBeginner,
                 onValueChange = { vGradeValue = it },
                 onPlusChange = { vGradePlus = it },
                 onBeginnerChange = { vGradeBeginner = it }
+            )
+        }
+
+        if (showAllGrades) {
+            Spacer(Modifier.height(BoulderTheme.spacing.small.dp))
+
+            Text(
+                text = "Show less",
+                style = BoulderTheme.typography.body,
+                color = BoulderTheme.colors.textSecondary,
+                modifier = Modifier.clickable { showAllGrades = false }
             )
         }
 
@@ -332,6 +377,96 @@ fun SentFlashChips(
             selectedValue = repeated,
             onSelect = { onRepeatedChange(!repeated) },
         )
+    }
+}
+
+@Composable
+fun FrenchQuickGradePicker(
+    current: FrenchGrade,
+    onSelect: (FrenchGrade) -> Unit,
+    onShowAll: () -> Unit
+) {
+    val lower = current.stepDown()
+    val upper = current.stepUp()
+
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(BoulderTheme.spacing.small.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        lower?.let {
+            SelectableChip(
+                label = it.toString(),
+                value = it,
+                selectedValue = current,
+                onSelect = onSelect,
+                modifier = Modifier.weight(1f)
+            )
+        }
+
+        SelectableChip(
+            label = current.toString(),
+            value = current,
+            selectedValue = current,
+            onSelect = onSelect,
+            modifier = Modifier.weight(1f)
+        )
+
+        upper?.let {
+            SelectableChip(
+                label = it.toString(),
+                value = it,
+                selectedValue = current,
+                onSelect = onSelect,
+                modifier = Modifier.weight(1f)
+            )
+        }
+
+        BoulderButton(text = "Show all", onClick = onShowAll)
+    }
+}
+
+@Composable
+fun VScaleQuickGradePicker(
+    current: VGrade,
+    onSelect: (VGrade) -> Unit,
+    onShowAll: () -> Unit
+) {
+    val lower = current.stepDown()
+    val upper = current.stepUp()
+
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(BoulderTheme.spacing.small.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        lower?.let {
+            SelectableChip(
+                label = it.toString(),
+                value = it,
+                selectedValue = current,
+                onSelect = onSelect,
+                modifier = Modifier.weight(1f)
+            )
+        }
+
+        SelectableChip(
+            label = current.toString(),
+            value = current,
+            selectedValue = current,
+            onSelect = onSelect,
+            modifier = Modifier.weight(1f)
+        )
+
+        upper?.let {
+            SelectableChip(
+                label = it.toString(),
+                value = it,
+                selectedValue = current,
+                onSelect = onSelect,
+                modifier = Modifier.weight(1f)
+            )
+        }
+
+        BoulderButton(text = "Show all", onClick = onShowAll)
     }
 }
 
