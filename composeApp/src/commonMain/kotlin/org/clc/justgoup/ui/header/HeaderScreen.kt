@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Icon
@@ -25,22 +26,28 @@ fun HeaderScreen(
         modifier = Modifier
             .fillMaxWidth()
             .padding(
-                top = BoulderTheme.spacing.extraLarge.dp,
+                top = BoulderTheme.spacing.extraLarge.dp + BoulderTheme.spacing.medium.dp,
             )
     ) {
 
         // ---- TITLE ----
-        Box(modifier = Modifier.fillMaxWidth()) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(40.dp),
+            contentAlignment = Alignment.Center
+        ) {
             Text(
                 text = "Just go up!",
                 style = BoulderTheme.typography.titleLarge,
-                color = BoulderTheme.colors.textPrimary,
-                modifier = Modifier.align(Alignment.Center)
+                color = BoulderTheme.colors.textPrimary
             )
 
             IconButton(
                 onClick = onOpenSettings,
-                modifier = Modifier.align(Alignment.CenterEnd)
+                modifier = Modifier
+                    .align(Alignment.CenterEnd)
+                    .size(40.dp)
             ) {
                 Icon(
                     imageVector = Icons.Default.Settings,
@@ -50,6 +57,6 @@ fun HeaderScreen(
             }
         }
 
-        Spacer(Modifier.height(BoulderTheme.spacing.large.dp))
+        Spacer(Modifier.height(BoulderTheme.spacing.medium.dp))
     }
 }
