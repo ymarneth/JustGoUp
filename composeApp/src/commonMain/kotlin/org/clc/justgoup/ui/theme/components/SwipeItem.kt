@@ -15,9 +15,13 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.pointer.positionChange
+import androidx.compose.ui.input.pointer.util.VelocityTracker
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 import kotlin.math.abs
+import kotlin.math.roundToInt
 
 @Composable
 fun SwipeItem(
@@ -25,19 +29,21 @@ fun SwipeItem(
     onSwipeRight: () -> Unit,
     content: @Composable () -> Unit
 ) {
+    val density = LocalDensity.current
     val offsetX = remember { mutableStateOf(0f) }
     val scope = rememberCoroutineScope()
-    val threshold = 200f
-    val swipeHandled = remember { mutableStateOf(false) }
+    val thresholdPx = with(density) { 96.dp.toPx() }
+    val flingVelocityPx = with(density) { 800.dp.toPx() }
+    val flyOutPx = with(density) { 600.dp.toPx() }
 
     Box(
         modifier = Modifier.pointerInput(Unit) {
             awaitEachGesture {
-                swipeHandled.value = false
                 offsetX.value = 0f
+                val velocityTracker = VelocityTracker()
 
                 val down = awaitFirstDown()
-                var dragAmountX = 0f
+                velocityTracker.addPosition(down.uptimeMillis, down.position)
                 var isHorizontal = false
 
                 val drag = awaitHorizontalTouchSlopOrCancellation(down.id) { change, _ ->
@@ -47,43 +53,33 @@ fun SwipeItem(
 
                 if (drag != null && isHorizontal) {
                     drag(drag.id) { change ->
-                        if (swipeHandled.value) return@drag
-
-                        val delta = change.positionChange().x
-                        dragAmountX += delta
-                        offsetX.value = dragAmountX
+                        velocityTracker.addPosition(change.uptimeMillis, change.position)
+                        offsetX.value += change.positionChange().x
                         change.consume()
                     }
 
-                    if (!swipeHandled.value) {
-                        swipeHandled.value = true
-                        val isSwipe = abs(dragAmountX) > threshold
-                        val isRight = dragAmountX > 0
+                    val velocity = velocityTracker.calculateVelocity().x
+                    val isFling = abs(velocity) > flingVelocityPx
+                    val isSwipe = abs(offsetX.value) > thresholdPx || isFling
+                    val isRight = if (isFling) velocity > 0 else offsetX.value > 0
 
+                    scope.launch {
+                        val anim = Animatable(offsetX.value)
                         if (isSwipe) {
+                            anim.animateTo(
+                                targetValue = if (isRight) flyOutPx else -flyOutPx,
+                                animationSpec = tween(200)
+                            ) { offsetX.value = value }
                             if (isRight) onSwipeRight() else onSwipeLeft()
-
-                            scope.launch {
-                                val anim = Animatable(dragAmountX)
-                                anim.animateTo(
-                                    targetValue = if (isRight) 1000f else -1000f,
-                                    animationSpec = tween(250)
-                                )
-                                offsetX.value = 0f
-                            }
                         } else {
-                            scope.launch {
-                                val anim = Animatable(dragAmountX)
-                                anim.animateTo(0f, tween(200))
-                                offsetX.value = 0f
-                            }
+                            anim.animateTo(0f, tween(200)) { offsetX.value = value }
                         }
                     }
                 }
             }
         }
     ) {
-        Box(Modifier.offset(x = offsetX.value.dp)) {
+        Box(Modifier.offset { IntOffset(offsetX.value.roundToInt(), 0) }) {
             content()
         }
     }
