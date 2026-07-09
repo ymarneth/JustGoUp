@@ -62,8 +62,10 @@ data class VGrade(
     }
 }
 
+// Ordered as a rainbow (warm to cool) followed by neutrals light to dark, so a picker
+// showing them in declaration order reads nicely rather than in arbitrary storage order.
 enum class HoldColor {
-    RED, PINK, BLUE, GREEN, TEAL, YELLOW, ORANGE, PURPLE, BLACK, WHITE, GREY
+    RED, ORANGE, YELLOW, GREEN, TEAL, BLUE, PURPLE, PINK, WHITE, GREY, BLACK
 }
 
 private const val FRENCH_MIN_NUMBER = 3

@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
@@ -37,6 +38,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 import org.clc.justgoup.boulder.FrenchGrade
@@ -84,7 +86,7 @@ fun AddBoulder(
     var sent by remember { mutableStateOf(false) }
     var flash by remember { mutableStateOf(false) }
     var repeated by remember { mutableStateOf(false) }
-    var color by remember { mutableStateOf<HoldColor?>(null) }
+    var color by remember { mutableStateOf<HoldColor?>(HoldColor.entries[HoldColor.entries.size / 2]) }
     var notes by remember { mutableStateOf("") }
 
     Column(modifier = Modifier.fillMaxWidth().verticalScroll(scrollState)) {
@@ -145,15 +147,17 @@ fun AddBoulder(
                     onSelect = {
                         gradeNumber = it.number
                         gradeLetter = it.letter
-                    },
-                    label = { grade ->
-                        if (grade == selected && gradePlus) {
+                    }
+                ) { grade, isSelected ->
+                    GradeChipContent(
+                        label = if (grade == selected && gradePlus) {
                             grade.copy(modifier = FrenchGrade.Modifier.Plus).toString()
                         } else {
                             grade.toString()
-                        }
-                    }
-                )
+                        },
+                        isSelected = isSelected
+                    )
+                }
 
                 Spacer(Modifier.height(BoulderTheme.spacing.small.dp))
 
@@ -182,15 +186,17 @@ fun AddBoulder(
                     onSelect = {
                         vGradeValue = it.value
                         vGradeBeginner = it.beginner
-                    },
-                    label = { grade ->
-                        if (grade == selected && vGradePlus) {
+                    }
+                ) { grade, isSelected ->
+                    GradeChipContent(
+                        label = if (grade == selected && vGradePlus) {
                             grade.copy(plus = true).toString()
                         } else {
                             grade.toString()
-                        }
-                    }
-                )
+                        },
+                        isSelected = isSelected
+                    )
+                }
 
                 Spacer(Modifier.height(BoulderTheme.spacing.small.dp))
 
@@ -338,28 +344,24 @@ fun HoldColorPicker(
     selected: HoldColor?,
     onSelected: (HoldColor?) -> Unit
 ) {
-    val colors = HoldColor.entries.toTypedArray()
-
-    FlowRow(
-        horizontalArrangement = Arrangement.spacedBy(BoulderTheme.spacing.small.dp),
-        verticalArrangement = Arrangement.spacedBy(BoulderTheme.spacing.small.dp)
-    ) {
-        colors.forEach { color ->
-            val isSelected = selected == color
-
-            Box(
-                modifier = Modifier
-                    .size(40.dp)
-                    .clip(CircleShape)
-                    .background(color.toColor())
-                    .border(
-                        width = if (isSelected) 3.dp else 1.dp,
-                        color = if (isSelected) BoulderTheme.colors.primary
-                        else BoulderTheme.colors.textSecondary,
-                        shape = CircleShape
-                    )
-                    .clickable { onSelected(color) })
-        }
+    GradeCarousel(
+        items = HoldColor.entries,
+        selected = selected,
+        onSelect = onSelected,
+        itemWidth = 56.dp,
+        itemHeight = 56.dp
+    ) { color, isSelected ->
+        Box(
+            modifier = Modifier
+                .size(40.dp)
+                .clip(CircleShape)
+                .background(color?.toColor() ?: BoulderTheme.colors.surface)
+                .border(
+                    width = if (isSelected) 3.dp else 1.dp,
+                    color = if (isSelected) BoulderTheme.colors.primary else BoulderTheme.colors.textSecondary,
+                    shape = CircleShape
+                )
+        )
     }
 }
 
@@ -444,14 +446,15 @@ fun <T> GradeCarousel(
     items: List<T>,
     selected: T,
     onSelect: (T) -> Unit,
-    label: (T) -> String,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    itemWidth: Dp = 72.dp,
+    itemHeight: Dp = 48.dp,
+    itemContent: @Composable (item: T, isSelected: Boolean) -> Unit
 ) {
     val selectedIndex = remember(items) { items.indexOf(selected).coerceAtLeast(0) }
     val listState = rememberLazyListState(initialFirstVisibleItemIndex = selectedIndex)
     val flingBehavior = rememberSnapFlingBehavior(listState)
     val coroutineScope = rememberCoroutineScope()
-    val itemWidth = 72.dp
 
     LaunchedEffect(listState) {
         snapshotFlow {
@@ -497,24 +500,16 @@ fun <T> GradeCarousel(
                 horizontalArrangement = Arrangement.spacedBy(BoulderTheme.spacing.small.dp)
             ) {
                 itemsIndexed(items) { index, item ->
-                    val isSelected = item == selected
-
                     Box(
                         modifier = Modifier
                             .width(itemWidth)
-                            .height(48.dp)
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(if (isSelected) BoulderTheme.colors.primary else BoulderTheme.colors.surface)
+                            .height(itemHeight)
                             .clickable {
                                 coroutineScope.launch { listState.animateScrollToItem(index) }
                             },
                         contentAlignment = Alignment.Center
                     ) {
-                        Text(
-                            text = label(item),
-                            style = BoulderTheme.typography.titleMedium,
-                            color = if (isSelected) BoulderTheme.colors.textPrimary else BoulderTheme.colors.textSecondary
-                        )
+                        itemContent(item, item == selected)
                     }
                 }
             }
@@ -525,6 +520,24 @@ fun <T> GradeCarousel(
             enabled = currentIndex < items.lastIndex,
             onClick = { jump(CAROUSEL_JUMP_AMOUNT) },
             modifier = Modifier.width(48.dp)
+        )
+    }
+}
+
+/** The rounded, primary/surface-filled chip used for text-based grade carousel items. */
+@Composable
+fun GradeChipContent(label: String, isSelected: Boolean) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .clip(RoundedCornerShape(8.dp))
+            .background(if (isSelected) BoulderTheme.colors.primary else BoulderTheme.colors.surface),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = label,
+            style = BoulderTheme.typography.titleMedium,
+            color = if (isSelected) BoulderTheme.colors.textPrimary else BoulderTheme.colors.textSecondary
         )
     }
 }
