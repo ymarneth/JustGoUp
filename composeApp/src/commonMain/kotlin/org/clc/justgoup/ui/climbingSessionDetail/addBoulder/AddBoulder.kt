@@ -158,15 +158,6 @@ fun AddBoulder(
                         isSelected = isSelected
                     )
                 }
-
-                Spacer(Modifier.height(BoulderTheme.spacing.small.dp))
-
-                SelectableChip(
-                    label = "+",
-                    value = true,
-                    selectedValue = gradePlus,
-                    onSelect = { gradePlus = !gradePlus }
-                )
             }
 
             gradingSystem == GradingSystem.FRENCH -> FrenchGradePicker(
@@ -197,16 +188,6 @@ fun AddBoulder(
                         isSelected = isSelected
                     )
                 }
-
-                Spacer(Modifier.height(BoulderTheme.spacing.small.dp))
-
-                SelectableChip(
-                    label = "+",
-                    value = true,
-                    selectedValue = vGradePlus && !vGradeBeginner,
-                    enabled = !vGradeBeginner,
-                    onSelect = { vGradePlus = !vGradePlus }
-                )
             }
 
             else -> VScalePicker(
@@ -221,14 +202,46 @@ fun AddBoulder(
 
         Spacer(Modifier.height(BoulderTheme.spacing.small.dp))
 
-        Text(
-            text = if (showAllGrades) "Show less" else "Show all",
-            style = BoulderTheme.typography.body,
-            color = BoulderTheme.colors.textSecondary,
-            modifier = Modifier
-                .align(Alignment.End)
-                .clickable { showAllGrades = !showAllGrades }
-        )
+        if (showAllGrades) {
+            Text(
+                text = "Show less",
+                style = BoulderTheme.typography.body,
+                color = BoulderTheme.colors.textSecondary,
+                modifier = Modifier
+                    .align(Alignment.End)
+                    .clickable { showAllGrades = false }
+            )
+        } else {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                when (gradingSystem) {
+                    GradingSystem.FRENCH -> SelectableChip(
+                        label = "+",
+                        value = true,
+                        selectedValue = gradePlus,
+                        onSelect = { gradePlus = !gradePlus }
+                    )
+
+                    GradingSystem.V_SCALE -> SelectableChip(
+                        label = "+",
+                        value = true,
+                        selectedValue = vGradePlus && !vGradeBeginner,
+                        enabled = !vGradeBeginner,
+                        onSelect = { vGradePlus = !vGradePlus }
+                    )
+                }
+
+                Text(
+                    text = "Show all",
+                    style = BoulderTheme.typography.body,
+                    color = BoulderTheme.colors.textSecondary,
+                    modifier = Modifier.clickable { showAllGrades = true }
+                )
+            }
+        }
 
         Spacer(Modifier.height(BoulderTheme.spacing.large.dp))
 
