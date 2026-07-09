@@ -66,62 +66,26 @@ enum class HoldColor {
     RED, PINK, BLUE, GREEN, TEAL, YELLOW, ORANGE, PURPLE, BLACK, WHITE, GREY
 }
 
-private val FRENCH_STEPS: List<Pair<Char, Boolean>> = listOf(
-    'a' to false, 'a' to true,
-    'b' to false, 'b' to true,
-    'c' to false, 'c' to true
-)
 private const val FRENCH_MIN_NUMBER = 3
 private const val FRENCH_MAX_NUMBER = 9
+private val FRENCH_LETTERS = listOf('a', 'b', 'c')
 
-fun FrenchGrade.stepUp(): FrenchGrade? {
-    val index = FRENCH_STEPS.indexOf((letter ?: 'a') to (modifier == FrenchGrade.Modifier.Plus)).coerceAtLeast(0)
-    return when {
-        index < FRENCH_STEPS.lastIndex -> {
-            val (nextLetter, nextPlus) = FRENCH_STEPS[index + 1]
-            copy(letter = nextLetter, modifier = if (nextPlus) FrenchGrade.Modifier.Plus else null)
-        }
-
-        number < FRENCH_MAX_NUMBER -> {
-            val (nextLetter, nextPlus) = FRENCH_STEPS.first()
-            FrenchGrade(number = number + 1, letter = nextLetter, modifier = if (nextPlus) FrenchGrade.Modifier.Plus else null)
-        }
-
-        else -> null
+/**
+ * Every French number+letter combination in order, e.g. 3a, 3b, 3c, 4a, ... 9c.
+ * The `+` modifier is intentionally not part of this sequence -- it's a separate,
+ * non-standard toggle applied independently of the base grade.
+ */
+fun frenchGradeSequence(): List<FrenchGrade> =
+    (FRENCH_MIN_NUMBER..FRENCH_MAX_NUMBER).flatMap { number ->
+        FRENCH_LETTERS.map { letter -> FrenchGrade(number = number, letter = letter) }
     }
-}
-
-fun FrenchGrade.stepDown(): FrenchGrade? {
-    val index = FRENCH_STEPS.indexOf((letter ?: 'a') to (modifier == FrenchGrade.Modifier.Plus)).coerceAtLeast(0)
-    return when {
-        index > 0 -> {
-            val (prevLetter, prevPlus) = FRENCH_STEPS[index - 1]
-            copy(letter = prevLetter, modifier = if (prevPlus) FrenchGrade.Modifier.Plus else null)
-        }
-
-        number > FRENCH_MIN_NUMBER -> {
-            val (prevLetter, prevPlus) = FRENCH_STEPS.last()
-            FrenchGrade(number = number - 1, letter = prevLetter, modifier = if (prevPlus) FrenchGrade.Modifier.Plus else null)
-        }
-
-        else -> null
-    }
-}
 
 private const val V_MIN = 0
 private const val V_MAX = 10
 
-fun VGrade.stepUp(): VGrade? = when {
-    beginner -> copy(value = V_MIN, beginner = false)
-    value < V_MAX -> copy(value = value + 1)
-    else -> null
-}
-
-fun VGrade.stepDown(): VGrade? = when {
-    beginner -> null
-    value > V_MIN -> copy(value = value - 1)
-    else -> copy(beginner = true)
-}
+/** VB, then V0..V10 in order. The `plus` flag is applied independently of this sequence. */
+fun vGradeSequence(): List<VGrade> =
+    listOf(VGrade(value = V_MIN, beginner = true)) + (V_MIN..V_MAX).map { VGrade(value = it) }
 
 fun Grade.toDisplayString(): String = when (this) {
     Grade.None -> "-"

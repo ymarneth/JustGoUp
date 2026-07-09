@@ -2,68 +2,38 @@ package org.clc.justgoup.boulder
 
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertNull
 
 class GradeSteppingTest {
 
     @Test
-    fun `french grade steps up through letter and plus before rolling to the next number`() {
-        val grade = FrenchGrade(number = 6, letter = 'a', modifier = null)
+    fun `french grade sequence spans 3a through 9c with no plus modifier`() {
+        val sequence = frenchGradeSequence()
 
-        assertEquals(FrenchGrade(6, 'a', FrenchGrade.Modifier.Plus), grade.stepUp())
-        assertEquals(FrenchGrade(6, 'b', null), FrenchGrade(6, 'a', FrenchGrade.Modifier.Plus).stepUp())
-        assertEquals(FrenchGrade(7, 'a', null), FrenchGrade(6, 'c', FrenchGrade.Modifier.Plus).stepUp())
+        assertEquals(FrenchGrade(3, 'a'), sequence.first())
+        assertEquals(FrenchGrade(9, 'c'), sequence.last())
+        assertEquals(21, sequence.size)
+        assertEquals(emptyList(), sequence.filter { it.modifier != null })
     }
 
     @Test
-    fun `french grade steps down through letter and plus before rolling to the previous number`() {
-        assertEquals(FrenchGrade(6, 'a', null), FrenchGrade(6, 'a', FrenchGrade.Modifier.Plus).stepDown())
-        assertEquals(FrenchGrade(6, 'a', FrenchGrade.Modifier.Plus), FrenchGrade(6, 'b', null).stepDown())
-        assertEquals(FrenchGrade(5, 'c', FrenchGrade.Modifier.Plus), FrenchGrade(6, 'a', null).stepDown())
+    fun `french grade sequence orders letters within a number before rolling to the next number`() {
+        val sequence = frenchGradeSequence()
+        val sixes = sequence.filter { it.number == 6 }
+
+        assertEquals(listOf('a', 'b', 'c'), sixes.map { it.letter })
+
+        val lastSix = sequence.indexOf(FrenchGrade(6, 'c'))
+        assertEquals(FrenchGrade(7, 'a'), sequence[lastSix + 1])
     }
 
     @Test
-    fun `french grade has no step up beyond the top of the supported range`() {
-        val top = FrenchGrade(number = 9, letter = 'c', modifier = FrenchGrade.Modifier.Plus)
-        assertNull(top.stepUp())
-    }
+    fun `v-scale sequence starts with beginner then spans V0 through V10`() {
+        val sequence = vGradeSequence()
 
-    @Test
-    fun `french grade has no step down below the bottom of the supported range`() {
-        val bottom = FrenchGrade(number = 3, letter = 'a', modifier = null)
-        assertNull(bottom.stepDown())
-    }
-
-    @Test
-    fun `french grade with a null letter is normalized to a for stepping`() {
-        val grade = FrenchGrade(number = 6, letter = null, modifier = null)
-        assertEquals(FrenchGrade(6, 'a', FrenchGrade.Modifier.Plus), grade.stepUp())
-    }
-
-    @Test
-    fun `v-scale steps up and down by one preserving the plus flag`() {
-        val grade = VGrade(value = 5, plus = true)
-        assertEquals(VGrade(value = 6, plus = true), grade.stepUp())
-        assertEquals(VGrade(value = 4, plus = true), grade.stepDown())
-    }
-
-    @Test
-    fun `v-scale has no step up beyond the top of the supported range`() {
-        assertNull(VGrade(value = 10).stepUp())
-    }
-
-    @Test
-    fun `v-scale steps down from V0 to beginner and has no step below that`() {
-        val v0 = VGrade(value = 0)
-        val beginner = v0.stepDown()
-
-        assertEquals(VGrade(value = 0, beginner = true), beginner)
-        assertNull(beginner?.stepDown())
-    }
-
-    @Test
-    fun `v-scale steps up from beginner to V0`() {
-        val beginner = VGrade(value = 0, beginner = true)
-        assertEquals(VGrade(value = 0, beginner = false), beginner.stepUp())
+        assertEquals(VGrade(value = 0, beginner = true), sequence.first())
+        assertEquals(VGrade(value = 0), sequence[1])
+        assertEquals(VGrade(value = 10), sequence.last())
+        assertEquals(12, sequence.size)
+        assertEquals(emptyList(), sequence.filter { it.plus })
     }
 }
