@@ -238,9 +238,7 @@ fun AddBoulder(
             value = attempts,
             onChange = {
                 attempts = it
-                if (it > 1) {
-                    flash = false
-                }
+                flash = sent && it == 1
             })
 
         Spacer(Modifier.height(BoulderTheme.spacing.large.dp))
@@ -409,8 +407,9 @@ fun SentFlashChips(
             value = true,
             selectedValue = sent,
             onSelect = {
-                onSentChange(!sent)
-                if (sent) onFlashChange(false)
+                val newSent = !sent
+                onSentChange(newSent)
+                onFlashChange(newSent && attempts == 1)
             }
         )
 
