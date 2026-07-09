@@ -52,7 +52,7 @@ fun AppNavHost(
             .padding(horizontal = BoulderTheme.spacing.medium.dp)
     ) {
         HeaderScreen(
-            onOpenSettings = { nav.navigate(Settings) }
+            onOpenSettings = { nav.navigate(Settings) { launchSingleTop = true } }
         )
 
         NavHost(navController = nav, startDestination = Home) {
