@@ -17,6 +17,7 @@ junit = "4.13.2"
 kotlin = "2.4.0"
 kotlin-serialization = "1.10.0"
 kotlin-datetime = "0.8.0"
+kotlin-coroutines = "1.10.2"
 sqldelight = "2.3.2"
 koin = "4.2.2"
 benManesVersions = "0.54.0"
@@ -35,6 +36,7 @@ androidx-lifecycle-viewmodelCompose = { module = "org.jetbrains.androidx.lifecyc
 androidx-lifecycle-runtimeCompose = { module = "org.jetbrains.androidx.lifecycle:lifecycle-runtime-compose", version.ref = "androidx-lifecycle" }
 kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "kotlin-datetime" }
 kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "kotlin-serialization" }
+kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlin-coroutines" }
 sqldelight-runtime = { module = "app.cash.sqldelight:runtime", version.ref = "sqldelight" }
 sqldelight-coroutines = { module = "app.cash.sqldelight:coroutines-extensions", version.ref = "sqldelight" }
 sqldelight-android = { module = "app.cash.sqldelight:android-driver", version.ref = "sqldelight" }
