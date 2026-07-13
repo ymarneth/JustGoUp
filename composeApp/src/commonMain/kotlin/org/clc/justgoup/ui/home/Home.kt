@@ -22,11 +22,59 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
+import kotlinx.datetime.Month
+import org.clc.justgoup.climbingSession.RecentClimbingSession
 import org.clc.justgoup.di.provideClimbingSessionRepository
+import org.clc.justgoup.ui.helpers.displayName
+import org.clc.justgoup.ui.helpers.toDeviceLocalDateTime
 import org.clc.justgoup.ui.theme.BoulderTheme
 import org.clc.justgoup.ui.theme.components.BoulderButton
 import org.clc.justgoup.ui.theme.components.ConfirmationCard
 import org.clc.justgoup.ui.theme.components.SwipeItem
+
+private sealed interface SessionListItem {
+    data class YearHeader(val year: Int) : SessionListItem
+    data class MonthHeader(val year: Int, val month: Month) : SessionListItem
+    data class Row(val session: RecentClimbingSession) : SessionListItem
+}
+
+private fun groupByYearAndMonth(sessions: List<RecentClimbingSession>): List<SessionListItem> = buildList {
+    var lastYear: Int? = null
+    var lastMonth: Month? = null
+
+    sessions.forEach { session ->
+        val local = session.date.toDeviceLocalDateTime()
+
+        if (local.year != lastYear) {
+            add(SessionListItem.YearHeader(local.year))
+            lastYear = local.year
+            lastMonth = null
+        }
+        if (local.month != lastMonth) {
+            add(SessionListItem.MonthHeader(local.year, local.month))
+            lastMonth = local.month
+        }
+        add(SessionListItem.Row(session))
+    }
+}
+
+@Composable
+private fun YearHeaderRow(year: Int) {
+    Text(
+        text = year.toString(),
+        style = BoulderTheme.typography.titleLarge,
+        color = BoulderTheme.colors.textPrimary
+    )
+}
+
+@Composable
+private fun MonthHeaderRow(month: Month) {
+    Text(
+        text = month.displayName(),
+        style = BoulderTheme.typography.label,
+        color = BoulderTheme.colors.textSecondary
+    )
+}
 
 @Composable
 fun Home(
@@ -41,6 +89,7 @@ fun Home(
     val localSessions = remember(recentSessions) { recentSessions.toMutableStateList() }
     val pendingDeleteId = remember { mutableStateOf<String?>(null) }
     val density = LocalDensity.current
+    val groupedItems = groupByYearAndMonth(localSessions)
 
     Column {
         // ---- START NEW SESSION ----
@@ -72,37 +121,50 @@ fun Home(
             contentPadding = PaddingValues(bottom = BoulderTheme.spacing.extraLarge.dp)
         ) {
             items(
-                items = localSessions,
-                key = { session -> session.id }
-            ) { session ->
-                val isPending = pendingDeleteId.value == session.id
-                val cardHeight = remember { mutableStateOf(0.dp) }
+                items = groupedItems,
+                key = { item ->
+                    when (item) {
+                        is SessionListItem.YearHeader -> "year-${item.year}"
+                        is SessionListItem.MonthHeader -> "month-${item.year}-${item.month}"
+                        is SessionListItem.Row -> item.session.id
+                    }
+                }
+            ) { item ->
+                when (item) {
+                    is SessionListItem.YearHeader -> YearHeaderRow(item.year)
+                    is SessionListItem.MonthHeader -> MonthHeaderRow(item.month)
+                    is SessionListItem.Row -> {
+                        val session = item.session
+                        val isPending = pendingDeleteId.value == session.id
+                        val cardHeight = remember { mutableStateOf(0.dp) }
 
-                if (isPending) {
-                    ConfirmationCard(
-                        message = "Delete this session?",
-                        height = cardHeight.value,
-                        onCancel = { pendingDeleteId.value = null },
-                        onConfirm = {
-                            pendingDeleteId.value = null
-                            localSessions.remove(session)
-                            viewModel.deleteSession(session.id)
-                        }
-                    )
-                } else {
-                    SwipeItem(
-                        onSwipeLeft = { pendingDeleteId.value = session.id },
-                        onSwipeRight = { pendingDeleteId.value = session.id }
-                    ) {
-                        SessionCard(
-                            session = session,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable { onOpenSession(session.id) }
-                                .onGloballyPositioned { coordinates ->
-                                    cardHeight.value = with(density) { coordinates.size.height.toDp() }
+                        if (isPending) {
+                            ConfirmationCard(
+                                message = "Delete this session?",
+                                height = cardHeight.value,
+                                onCancel = { pendingDeleteId.value = null },
+                                onConfirm = {
+                                    pendingDeleteId.value = null
+                                    localSessions.remove(session)
+                                    viewModel.deleteSession(session.id)
                                 }
-                        )
+                            )
+                        } else {
+                            SwipeItem(
+                                onSwipeLeft = { pendingDeleteId.value = session.id },
+                                onSwipeRight = { pendingDeleteId.value = session.id }
+                            ) {
+                                SessionCard(
+                                    session = session,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clickable { onOpenSession(session.id) }
+                                        .onGloballyPositioned { coordinates ->
+                                            cardHeight.value = with(density) { coordinates.size.height.toDp() }
+                                        }
+                                )
+                            }
+                        }
                     }
                 }
             }
