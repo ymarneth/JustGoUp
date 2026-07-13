@@ -1,37 +1,20 @@
-This is a Kotlin Multiplatform project targeting Android, iOS.
+# JustGoUp
 
-* [/composeApp](./composeApp/src) is a Kotlin Multiplatform library module with the code shared across Android and iOS.
-  It contains several subfolders:
-  - [commonMain](./composeApp/src/commonMain/kotlin) is for code that’s common for all targets.
-  - Other folders are for Kotlin code that will be compiled for only the platform indicated in the folder name.
-    For example, if you want to use Apple’s CoreCrypto for the iOS part of your Kotlin app,
-    the [iosMain](./composeApp/src/iosMain/kotlin) folder would be the right place for such calls.
+A free, open-source bouldering session tracker for Android (iOS release planned), built with Kotlin Multiplatform and Compose Multiplatform.
 
-* [/androidApp](./androidApp/src) is the Android application entry point (`MainActivity`, manifest, launcher
-  resources, signing config). It depends on `composeApp` for all shared UI and logic. Split out from `composeApp`
-  because AGP 9 no longer allows the Kotlin Multiplatform plugin and `com.android.application` in the same module.
+**Beta:** JustGoUp is still under active development. Expect bugs, breaking changes, and evolving features. If you encounter bugs or have feature requests, feel free to open an issue.
 
-* [/iosApp](./iosApp/iosApp) contains iOS applications. Even if you’re sharing your UI with Compose Multiplatform,
-  you need this entry point for your iOS app. This is also where you should add SwiftUI code for your project.
+## Features
 
-### Build and Run Android Application
+- Log climbing sessions with gym name, date, and boulders
+- Track grade (French or V-scale), attempts, sent/flash/repeated, and hold color per boulder
+- Browse your session history
+- Back up and restore your data as a JSON file
 
-To build and run the development version of the Android app, use the run configuration from the run widget
-in your IDE’s toolbar or build it directly from the terminal:
-- on macOS/Linux
-  ```shell
-  ./gradlew :androidApp:assembleDebug
-  ```
-- on Windows
-  ```shell
-  .\gradlew.bat :androidApp:assembleDebug
-  ```
+## Data
 
-### Build and Run iOS Application
+All your data stays on your device. Sessions and boulders are stored in a local database, with no account, sign-in, or server involved. Backups (export/import) are plain files you save and control yourself.
 
-To build and run the development version of the iOS app, use the run configuration from the run widget
-in your IDE’s toolbar or open the [/iosApp](./iosApp) directory in Xcode and run it from there.
+## License
 
----
-
-Learn more about [Kotlin Multiplatform](https://www.jetbrains.com/help/kotlin-multiplatform-dev/get-started.html)…
+Licensed under the GNU General Public License v3.0. See [LICENSE](./LICENSE) for details.
