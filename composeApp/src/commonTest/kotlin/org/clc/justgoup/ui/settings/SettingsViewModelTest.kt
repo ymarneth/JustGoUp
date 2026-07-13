@@ -102,7 +102,7 @@ private class FakeClimbingSessionRepository(
     var restoredWith: List<ClimbingSession>? = null
         private set
 
-    override suspend fun findRecentSessions(): List<RecentClimbingSession> = emptyList()
+    override suspend fun findRecentSessions(offset: Int, limit: Int): List<RecentClimbingSession> = emptyList()
     override suspend fun getSessionById(id: String): ClimbingSession? = null
     override suspend fun startSession(command: StartClimbingSessionCommand): ClimbingSession =
         error("not used in this test")

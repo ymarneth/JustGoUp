@@ -7,6 +7,8 @@ import kotlinx.datetime.LocalDateTime
 import org.clc.justgoup.boulder.Boulder
 import org.clc.justgoup.boulder.HoldColor
 import org.clc.justgoup.climbingSession.ClimbingSession
+import org.clc.justgoup.climbingSession.RecentClimbingSession
+import org.clc.justgoup.climbingSession.sessionTitleFor
 import kotlin.time.ExperimentalTime
 
 internal class Database(
@@ -59,6 +61,22 @@ internal class Database(
                     )
                 }.executeAsList()
             )
+        }
+
+    internal suspend fun findRecentSessionsPage(offset: Int, limit: Int): List<RecentClimbingSession> =
+        withContext(Dispatchers.IO) {
+            queries.findRecentSessionsPage(
+                limit = limit.toLong(),
+                offset = offset.toLong()
+            ) { sessionId, location, startTime, boulderCount ->
+                RecentClimbingSession(
+                    id = sessionId,
+                    title = sessionTitleFor(startTime),
+                    location = location,
+                    date = startTime,
+                    boulders = boulderCount.toInt()
+                )
+            }.executeAsList()
         }
 
     internal suspend fun findSessionWithBouldersById(

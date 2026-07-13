@@ -8,7 +8,7 @@ import org.clc.justgoup.cache.Database
 
 
 interface ClimbingSessionRepository {
-    suspend fun findRecentSessions(): List<RecentClimbingSession>
+    suspend fun findRecentSessions(offset: Int, limit: Int): List<RecentClimbingSession>
     suspend fun getSessionById(id: String): ClimbingSession?
     suspend fun startSession(command: StartClimbingSessionCommand): ClimbingSession
     suspend fun updateSession(id: String, command: ClimbingSessionUpdateCommand)
@@ -24,12 +24,8 @@ internal class ClimbingSessionRepositoryImpl(
     private val database: Database
 ) : ClimbingSessionRepository {
 
-    override suspend fun findRecentSessions(): List<RecentClimbingSession> {
-        val sessions = database.findAllSessions()
-        return sessions
-            .sortedByDescending { it.startTime }
-            .map { it.toRecent() }
-    }
+    override suspend fun findRecentSessions(offset: Int, limit: Int): List<RecentClimbingSession> =
+        database.findRecentSessionsPage(offset = offset, limit = limit)
 
     override suspend fun getSessionById(id: String): ClimbingSession? =
         database.findSessionWithBouldersById(id)
