@@ -30,19 +30,17 @@ data class RecentClimbingSession(
     val boulders: Int
 )
 
-fun ClimbingSession.toRecent(): RecentClimbingSession {
-    val title = when (startTime.hour) {
-        in 5..11 -> "Morning Session"
-        in 12..16 -> "Afternoon Session"
-        in 17..21 -> "Evening Session"
-        else -> "Night Session"
-    }
-
-    return RecentClimbingSession(
-        id = id,
-        title = title,
-        location = location,
-        date = startTime,
-        boulders = totalBoulders
-    )
+fun sessionTitleFor(startTime: LocalDateTime): String = when (startTime.hour) {
+    in 5..11 -> "Morning Session"
+    in 12..16 -> "Afternoon Session"
+    in 17..21 -> "Evening Session"
+    else -> "Night Session"
 }
+
+fun ClimbingSession.toRecent(): RecentClimbingSession = RecentClimbingSession(
+    id = id,
+    title = sessionTitleFor(startTime),
+    location = location,
+    date = startTime,
+    boulders = totalBoulders
+)

@@ -48,6 +48,19 @@ LEFT JOIN boulder
 ORDER BY climbing_session.startTime DESC,
          boulder.createdAt DESC;
 
+findRecentSessionsPage:
+SELECT
+    climbing_session.id        AS session_id,
+    climbing_session.location  AS session_location,
+    climbing_session.startTime AS session_startTime,
+    COUNT(boulder.id)          AS boulder_count
+FROM climbing_session
+LEFT JOIN boulder
+    ON boulder.sessionId = climbing_session.id
+GROUP BY climbing_session.id
+ORDER BY climbing_session.startTime DESC
+LIMIT :limit OFFSET :offset;
+
 findSessionWithBouldersById:
 SELECT
     climbing_session.id            AS session_id,
