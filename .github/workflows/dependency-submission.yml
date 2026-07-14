@@ -1,0 +1,57 @@
+name: Dependency Submission
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  dependency-submission:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 25
+
+      - name: Set up Android SDK
+        run: |
+          SDKMANAGER=$(find "$ANDROID_HOME/cmdline-tools" -name sdkmanager -type f | sort -V | tail -1)
+          yes | "$SDKMANAGER" --licenses > /dev/null || true
+          COMPILE_SDK=$(grep -oP 'android-compileSdk = "\K[0-9]+' gradle/libs.versions.toml)
+          success=false
+          for i in 1 2 3; do
+            if "$SDKMANAGER" "platform-tools" "platforms;android-$COMPILE_SDK"; then
+              success=true
+              break
+            fi
+            echo "sdkmanager attempt $i failed, retrying in 10s..."
+            sleep 10
+          done
+          $success
+
+      - name: Cache Gradle
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties') }}
+          restore-keys: gradle-
+
+      - name: Cache Kotlin/Native
+        uses: actions/cache@v3
+        with:
+          path: ~/.konan
+          key: konan-${{ hashFiles('gradle/libs.versions.toml') }}
+          restore-keys: konan-
+
+      - name: Generate and submit dependency graph
+        uses: gradle/actions/dependency-submission@v4
