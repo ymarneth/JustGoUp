@@ -20,7 +20,11 @@ on:
         required: true
 
 jobs:
+  test-android:
+    uses: ./.github/workflows/test-android.yml
+
   build-android:
+    needs: test-android
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -68,18 +72,6 @@ jobs:
             ~/.gradle/wrapper
           key: gradle-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties') }}
           restore-keys: gradle-
-
-      - name: Cache Kotlin/Native
-        uses: actions/cache@v3
-        with:
-          path: ~/.konan
-          key: konan-${{ hashFiles('gradle/libs.versions.toml') }}
-          restore-keys: konan-
-
-      - name: Run tests
-        run: |
-          chmod +x ./gradlew
-          ./gradlew :composeApp:allTests
 
       - name: Build Android Release
         run: |
