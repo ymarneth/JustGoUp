@@ -8,6 +8,7 @@ jobs:
     runs-on: macos-latest
     permissions:
       contents: read
+      checks: write
 
     steps:
       - name: Checkout code
@@ -48,3 +49,12 @@ jobs:
           path: |
             composeApp/build/reports/tests/iosSimulatorArm64Test/
             composeApp/build/test-results/iosSimulatorArm64Test/
+
+      - name: Publish test report
+        if: always()
+        continue-on-error: true
+        uses: dorny/test-reporter@v3
+        with:
+          name: iOS Test Report
+          path: "composeApp/build/test-results/iosSimulatorArm64Test/*.xml"
+          reporter: java-junit

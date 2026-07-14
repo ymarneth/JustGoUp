@@ -8,6 +8,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+      checks: write
 
     steps:
       - name: Checkout code
@@ -51,3 +52,12 @@ jobs:
           path: |
             composeApp/build/reports/tests/testAndroidHostTest/
             composeApp/build/test-results/testAndroidHostTest/
+
+      - name: Publish test report
+        if: always()
+        continue-on-error: true
+        uses: dorny/test-reporter@v3
+        with:
+          name: Android Test Report
+          path: "composeApp/build/test-results/testAndroidHostTest/*.xml"
+          reporter: java-junit
