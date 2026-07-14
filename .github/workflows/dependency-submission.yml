@@ -1,15 +1,16 @@
-name: Test Android
+name: Dependency Submission
 
 on:
-  workflow_call:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
 
 jobs:
-  test-android:
+  dependency-submission:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      checks: write
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -52,16 +53,5 @@ jobs:
           key: konan-${{ hashFiles('gradle/libs.versions.toml') }}
           restore-keys: konan-
 
-      - name: Run Android tests
-        run: |
-          chmod +x ./gradlew
-          ./gradlew :composeApp:testAndroidHostTest
-
-      - name: Publish test report
-        if: always()
-        continue-on-error: true
-        uses: dorny/test-reporter@v3
-        with:
-          name: Android Test Report
-          path: "composeApp/build/test-results/testAndroidHostTest/*.xml"
-          reporter: java-junit
+      - name: Generate and submit dependency graph
+        uses: gradle/actions/dependency-submission@v4
