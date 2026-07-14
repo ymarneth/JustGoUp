@@ -1,9 +1,9 @@
 name: Set up Android SDK
 description: >
   Accepts Android SDK licenses using the cmdline-tools already present on the
-  GitHub-hosted runner, with retries for transient network failures. Does not
-  pre-install any platform packages — Gradle/AGP auto-downloads whatever
-  compileSdk actually needs during the build itself.
+  GitHub-hosted runner. Does not pre-install any platform packages —
+  Gradle/AGP auto-downloads whatever compileSdk actually needs during the
+  build itself.
 
 runs:
   using: composite
@@ -25,13 +25,10 @@ runs:
           exit 1
         fi
 
-        success=false
-        for i in 1 2 3; do
-          if yes | "$SDKMANAGER" --licenses; then
-            success=true
-            break
-          fi
-          echo "sdkmanager --licenses attempt $i failed, retrying in 10s..."
-          sleep 10
-        done
-        $success
+        # sdkmanager --licenses can report a non-zero exit code from the `yes`
+        # pipe closing (SIGPIPE) even after successfully accepting every
+        # license -- its own "All SDK package licenses accepted" output
+        # appears before the reported failure. Treat this as best-effort; a
+        # genuine license or network problem instead surfaces as a clear
+        # failure in the actual Gradle build that follows this step.
+        yes | "$SDKMANAGER" --licenses || true
