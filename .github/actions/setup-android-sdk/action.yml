@@ -11,10 +11,23 @@ runs:
     - name: Accept Android SDK licenses
       shell: bash
       run: |
-        SDKMANAGER=$(find "$ANDROID_HOME/cmdline-tools" -name sdkmanager -type f | sort -V | tail -1)
+        SDK_ROOT="${ANDROID_HOME:-$ANDROID_SDK_ROOT}"
+        echo "ANDROID_HOME=$ANDROID_HOME"
+        echo "ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT"
+        echo "Using SDK_ROOT=$SDK_ROOT"
+
+        SDKMANAGER=$(find "$SDK_ROOT/cmdline-tools" -name sdkmanager -type f 2>/dev/null | sort -V | tail -1)
+        echo "Resolved sdkmanager: ${SDKMANAGER:-<not found>}"
+
+        if [ -z "$SDKMANAGER" ]; then
+          echo "::error::Could not find sdkmanager under \$SDK_ROOT/cmdline-tools ($SDK_ROOT)"
+          find "$SDK_ROOT" -maxdepth 2 2>/dev/null || echo "SDK_ROOT does not exist"
+          exit 1
+        fi
+
         success=false
         for i in 1 2 3; do
-          if yes | "$SDKMANAGER" --licenses > /dev/null; then
+          if yes | "$SDKMANAGER" --licenses; then
             success=true
             break
           fi
