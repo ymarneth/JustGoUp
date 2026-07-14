@@ -44,15 +44,6 @@ jobs:
           chmod +x ./gradlew
           ./gradlew :composeApp:testAndroidHostTest
 
-      - name: Upload test report
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: android-test-report
-          path: |
-            composeApp/build/reports/tests/testAndroidHostTest/
-            composeApp/build/test-results/testAndroidHostTest/
-
       - name: Publish test report
         if: always()
         continue-on-error: true

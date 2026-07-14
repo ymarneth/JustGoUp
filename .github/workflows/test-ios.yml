@@ -41,15 +41,6 @@ jobs:
           chmod +x ./gradlew
           ./gradlew :composeApp:iosSimulatorArm64Test
 
-      - name: Upload test report
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: ios-test-report
-          path: |
-            composeApp/build/reports/tests/iosSimulatorArm64Test/
-            composeApp/build/test-results/iosSimulatorArm64Test/
-
       - name: Publish test report
         if: always()
         continue-on-error: true
