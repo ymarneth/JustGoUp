@@ -13,16 +13,17 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import org.clc.justgoup.di.provideClimbingSessionRepository
+import org.clc.justgoup.climbingSession.ClimbingSessionRepository
 import org.clc.justgoup.ui.theme.BoulderTheme
 import org.clc.justgoup.ui.theme.components.BoulderButton
 import org.clc.justgoup.ui.theme.components.BoulderTextField
+import org.koin.compose.koinInject
 
 @Composable
 fun AddSession(
     onOpenSession: (String) -> Unit
 ) {
-    val repository = provideClimbingSessionRepository()
+    val repository = koinInject<ClimbingSessionRepository>()
     val viewModel = remember { AddSessionViewModel(repository) }
 
     var location by remember { mutableStateOf("") }

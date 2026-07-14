@@ -16,7 +16,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import org.clc.justgoup.di.provideClimbingSessionRepository
+import org.clc.justgoup.climbingSession.ClimbingSessionRepository
 import org.clc.justgoup.ui.theme.BoulderTheme
 import org.clc.justgoup.ui.theme.components.BoulderButton
 import androidx.compose.animation.core.FastOutSlowInEasing
@@ -27,13 +27,14 @@ import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
 import org.clc.justgoup.ui.theme.components.ConfirmationCard
 import org.clc.justgoup.ui.theme.components.SwipeItem
+import org.koin.compose.koinInject
 
 @Composable
 fun SessionDetailScreen(
     sessionId: String,
     onAddBoulder: (String) -> Unit,
 ) {
-    val repository = provideClimbingSessionRepository()
+    val repository = koinInject<ClimbingSessionRepository>()
     val viewModel = remember { SessionDetailViewModel(repository, sessionId) }
     val session by viewModel.session.collectAsState(initial = null)
 
