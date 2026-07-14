@@ -31,4 +31,4 @@ runs:
         # appears before the reported failure. Treat this as best-effort; a
         # genuine license or network problem instead surfaces as a clear
         # failure in the actual Gradle build that follows this step.
-        yes | "$SDKMANAGER" --licenses || true
+        yes | "$SDKMANAGER" --licenses > /dev/null || true
