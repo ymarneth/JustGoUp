@@ -28,7 +28,8 @@ import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
-import org.clc.justgoup.di.provideClimbingSessionRepository
+import org.clc.justgoup.climbingSession.ClimbingSessionRepository
+import org.koin.compose.koinInject
 import org.clc.justgoup.export.rememberBackupExporter
 import org.clc.justgoup.export.rememberBackupImporter
 import org.clc.justgoup.ui.theme.BoulderTheme
@@ -45,7 +46,7 @@ fun SettingsScreen(
     onChangeTheme: (ThemeMode) -> Unit,
     onBack: () -> Unit
 ) {
-    val repository = provideClimbingSessionRepository()
+    val repository = koinInject<ClimbingSessionRepository>()
     val viewModel = remember { SettingsViewModel(repository) }
     val scope = rememberCoroutineScope()
     val scrollState = rememberScrollState()

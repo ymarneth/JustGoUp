@@ -56,6 +56,7 @@ kotlin {
             implementation(libs.sqldelight.coroutines)
             // --- Koin (common) ---
             implementation(libs.koin.core)
+            implementation(libs.koin.compose)
         }
         iosMain.dependencies {
             implementation(libs.sqldelight.native)

@@ -49,22 +49,23 @@ import org.clc.justgoup.boulder.VGrade
 import org.clc.justgoup.boulder.frenchGradeSequence
 import org.clc.justgoup.boulder.toColor
 import org.clc.justgoup.boulder.vGradeSequence
-import org.clc.justgoup.di.provideClimbingSessionRepository
-import org.clc.justgoup.di.provideGradingSystemPreference
-import org.clc.justgoup.di.provideLastGradePreference
+import org.clc.justgoup.climbingSession.ClimbingSessionRepository
+import org.clc.justgoup.preferences.GradingSystemPreference
+import org.clc.justgoup.preferences.LastGradePreference
 import org.clc.justgoup.ui.theme.BoulderTheme
 import org.clc.justgoup.ui.theme.components.BoulderButton
 import org.clc.justgoup.ui.theme.components.BoulderTextField
 import org.clc.justgoup.ui.theme.components.ChipDivider
 import org.clc.justgoup.ui.theme.components.SelectableChip
+import org.koin.compose.koinInject
 
 @Composable
 fun AddBoulder(
     onOpenSession: (String) -> Unit, sessionId: String
 ) {
-    val repository = provideClimbingSessionRepository()
-    val gradingSystemPreference = provideGradingSystemPreference()
-    val lastGradePreference = provideLastGradePreference()
+    val repository = koinInject<ClimbingSessionRepository>()
+    val gradingSystemPreference = koinInject<GradingSystemPreference>()
+    val lastGradePreference = koinInject<LastGradePreference>()
     val viewModel = remember {
         AddBoulderViewModel(repository, sessionId, gradingSystemPreference, lastGradePreference)
     }

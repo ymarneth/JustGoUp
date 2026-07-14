@@ -30,7 +30,8 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import kotlinx.datetime.Month
 import org.clc.justgoup.climbingSession.RecentClimbingSession
-import org.clc.justgoup.di.provideClimbingSessionRepository
+import org.clc.justgoup.climbingSession.ClimbingSessionRepository
+import org.koin.compose.koinInject
 import org.clc.justgoup.ui.helpers.displayName
 import org.clc.justgoup.ui.helpers.toDeviceLocalDateTime
 import org.clc.justgoup.ui.theme.BoulderTheme
@@ -105,7 +106,7 @@ fun Home(
     onStartSession: () -> Unit,
     onOpenSession: (String) -> Unit
 ) {
-    val repository = provideClimbingSessionRepository()
+    val repository = koinInject<ClimbingSessionRepository>()
     val viewModel = remember { HomeViewModel(repository) }
 
     val recentSessions by viewModel.recentSessions.collectAsState(initial = emptyList())
