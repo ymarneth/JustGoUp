@@ -44,20 +44,7 @@ jobs:
           java-version: 25
 
       - name: Set up Android SDK
-        run: |
-          SDKMANAGER=$(find "$ANDROID_HOME/cmdline-tools" -name sdkmanager -type f | sort -V | tail -1)
-          yes | "$SDKMANAGER" --licenses > /dev/null || true
-          COMPILE_SDK=$(grep -oP 'android-compileSdk = "\K[0-9]+' gradle/libs.versions.toml)
-          success=false
-          for i in 1 2 3; do
-            if "$SDKMANAGER" "platform-tools" "platforms;android-$COMPILE_SDK"; then
-              success=true
-              break
-            fi
-            echo "sdkmanager attempt $i failed, retrying in 10s..."
-            sleep 10
-          done
-          $success
+        uses: ./.github/actions/setup-android-sdk
 
       - name: Compute versionCode from version
         id: versioning

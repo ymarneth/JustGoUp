@@ -1,0 +1,24 @@
+name: Set up Android SDK
+description: >
+  Accepts Android SDK licenses using the cmdline-tools already present on the
+  GitHub-hosted runner, with retries for transient network failures. Does not
+  pre-install any platform packages — Gradle/AGP auto-downloads whatever
+  compileSdk actually needs during the build itself.
+
+runs:
+  using: composite
+  steps:
+    - name: Accept Android SDK licenses
+      shell: bash
+      run: |
+        SDKMANAGER=$(find "$ANDROID_HOME/cmdline-tools" -name sdkmanager -type f | sort -V | tail -1)
+        success=false
+        for i in 1 2 3; do
+          if yes | "$SDKMANAGER" --licenses > /dev/null; then
+            success=true
+            break
+          fi
+          echo "sdkmanager --licenses attempt $i failed, retrying in 10s..."
+          sleep 10
+        done
+        $success
