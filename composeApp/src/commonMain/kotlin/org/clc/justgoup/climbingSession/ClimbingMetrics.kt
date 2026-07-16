@@ -23,7 +23,7 @@ data class GymStats(
 
 enum class GymTrend { UP, DOWN, STEADY }
 
-private const val RECENT_WINDOW_SESSIONS = 2
+private const val RECENT_WINDOW_SESSIONS = 5
 private const val MIN_TOTAL_SESSIONS_FOR_TREND = 8
 private const val MIN_BOULDERS_IN_WINDOW = 3
 private const val TREND_FLAT_BAND = 0.05
