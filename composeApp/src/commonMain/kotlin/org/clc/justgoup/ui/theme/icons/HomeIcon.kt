@@ -4,9 +4,6 @@ import androidx.compose.material.icons.materialPath
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 
-// material-icons-core doesn't include a Home icon (only material-icons-extended does), and that
-// module isn't a dependency here -- see StatsIcon.kt for why file-based drawable resources are a
-// dead end on this project's setup, so this is hand-authored the same way.
 val HomeIcon: ImageVector by lazy {
     ImageVector.Builder(
         name = "Home",

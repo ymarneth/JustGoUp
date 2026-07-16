@@ -4,11 +4,7 @@ import androidx.compose.material.icons.materialPath
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 
-// Ported from Google's "insert_chart" Material Symbol (viewBox "0 -960 960 960"); every
-// absolute y is shifted by +960 to fit Compose's 0..960 viewport, relative deltas are untouched.
-// Compose Multiplatform's file-based drawable resources (SVG/PNG/XML) don't reach the Android
-// APK at all on this project's AGP 9 + com.android.kotlin.multiplatform.library setup -- a known
-// upstream bug (JetBrains CMP-9547) -- so this icon is authored directly as an ImageVector instead.
+// Compose Multiplatform's file-based drawable resources (SVG/PNG/XML) don't reach the Android APK at all on this project's AGP 9 + com.android.kotlin.multiplatform.library setup -- a known upstream bug (JetBrains CMP-9547).
 val StatsIcon: ImageVector by lazy {
     ImageVector.Builder(
         name = "Stats",
