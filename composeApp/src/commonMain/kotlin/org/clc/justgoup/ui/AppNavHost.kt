@@ -7,17 +7,20 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import kotlinx.serialization.Serializable
+import org.clc.justgoup.ui.bottomBar.BottomBar
 import org.clc.justgoup.ui.climbingSessionDetail.SessionDetailScreen
 import org.clc.justgoup.ui.climbingSessionDetail.addBoulder.AddBoulder
 import org.clc.justgoup.ui.header.HeaderScreen
 import org.clc.justgoup.ui.home.Home
 import org.clc.justgoup.ui.home.addSession.AddSession
 import org.clc.justgoup.ui.settings.SettingsScreen
+import org.clc.justgoup.ui.stats.StatsScreen
 import org.clc.justgoup.ui.theme.BoulderTheme
 import org.clc.justgoup.ui.theme.ThemeMode
 
@@ -37,6 +40,9 @@ data class AddBoulder(val sessionId: String)
 @Serializable
 object Settings
 
+@Serializable
+object Stats
+
 // ---------- NAVIGATION HOST ----------
 @Composable
 fun AppNavHost(
@@ -49,58 +55,81 @@ fun AppNavHost(
         modifier = Modifier
             .fillMaxSize()
             .background(BoulderTheme.colors.background)
-            .padding(horizontal = BoulderTheme.spacing.medium.dp)
     ) {
-        HeaderScreen(
-            onOpenSettings = { nav.navigate(Settings) { launchSingleTop = true } }
-        )
-
-        NavHost(navController = nav, startDestination = Home) {
-            composable<Home> {
-                Home(
-                    onStartSession = { nav.navigate(AddSession) },
-                    onOpenSession = { id -> nav.navigate(SessionDetail(id)) }
-                )
-            }
-
-            composable<SessionDetail> { backStack ->
-                val args = backStack.toRoute<SessionDetail>()
-                SessionDetailScreen(
-                    onAddBoulder = { id -> nav.navigate(AddBoulder(id)) },
-                    sessionId = args.sessionId
-                )
-            }
-
-            composable<AddSession> {
-                AddSession(
-                    onOpenSession = { id ->
-                        nav.navigate(SessionDetail(id)) {
-                            popUpTo<AddSession> { inclusive = true }
-                        }
-                    }
-                )
-            }
-
-            composable<AddBoulder> { backStack ->
-                val args = backStack.toRoute<AddBoulder>()
-                AddBoulder(
-                    onOpenSession = { id ->
-                        nav.navigate(SessionDetail(id)) {
-                            popUpTo<SessionDetail> { inclusive = true }
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .padding(horizontal = BoulderTheme.spacing.medium.dp)
+        ) {
+            HeaderScreen(
+                onOpenHome = {
+                    if (nav.currentDestination?.hasRoute<Home>() != true) {
+                        nav.navigate(Home) {
+                            popUpTo(Home) { inclusive = false }
                             launchSingleTop = true
                         }
-                    },
-                    sessionId = args.sessionId
-                )
-            }
+                    }
+                },
+                onOpenSettings = { nav.navigate(Settings) { launchSingleTop = true } }
+            )
 
-            composable<Settings> {
-                SettingsScreen(
-                    currentTheme = currentTheme,
-                    onChangeTheme = onChangeTheme,
-                    onBack = { nav.popBackStack() }
-                )
+            NavHost(
+                navController = nav,
+                startDestination = Home,
+                modifier = Modifier.weight(1f)
+            ) {
+                composable<Home> {
+                    Home(
+                        onStartSession = { nav.navigate(AddSession) },
+                        onOpenSession = { id -> nav.navigate(SessionDetail(id)) }
+                    )
+                }
+
+                composable<SessionDetail> { backStack ->
+                    val args = backStack.toRoute<SessionDetail>()
+                    SessionDetailScreen(
+                        onAddBoulder = { id -> nav.navigate(AddBoulder(id)) },
+                        sessionId = args.sessionId
+                    )
+                }
+
+                composable<AddSession> {
+                    AddSession(
+                        onOpenSession = { id ->
+                            nav.navigate(SessionDetail(id)) {
+                                popUpTo<AddSession> { inclusive = true }
+                            }
+                        }
+                    )
+                }
+
+                composable<AddBoulder> { backStack ->
+                    val args = backStack.toRoute<AddBoulder>()
+                    AddBoulder(
+                        onOpenSession = { id ->
+                            nav.navigate(SessionDetail(id)) {
+                                popUpTo<SessionDetail> { inclusive = true }
+                                launchSingleTop = true
+                            }
+                        },
+                        sessionId = args.sessionId
+                    )
+                }
+
+                composable<Settings> {
+                    SettingsScreen(
+                        currentTheme = currentTheme,
+                        onChangeTheme = onChangeTheme,
+                        onBack = { nav.popBackStack() }
+                    )
+                }
+
+                composable<Stats> {
+                    StatsScreen()
+                }
             }
         }
+
+        BottomBar(onOpenStats = { nav.navigate(Stats) { launchSingleTop = true } })
     }
 }

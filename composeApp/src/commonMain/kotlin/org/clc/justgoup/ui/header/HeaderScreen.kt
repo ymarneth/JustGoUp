@@ -17,9 +17,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import org.clc.justgoup.ui.theme.BoulderTheme
+import org.clc.justgoup.ui.theme.icons.HomeIcon
 
 @Composable
 fun HeaderScreen(
+    onOpenHome: () -> Unit,
     onOpenSettings: () -> Unit
 ) {
     Column(
@@ -42,6 +44,19 @@ fun HeaderScreen(
                 style = BoulderTheme.typography.titleLarge,
                 color = BoulderTheme.colors.textPrimary
             )
+
+            IconButton(
+                onClick = onOpenHome,
+                modifier = Modifier
+                    .align(Alignment.CenterStart)
+                    .size(40.dp)
+            ) {
+                Icon(
+                    imageVector = HomeIcon,
+                    contentDescription = "Home",
+                    tint = BoulderTheme.colors.textPrimary
+                )
+            }
 
             IconButton(
                 onClick = onOpenSettings,
