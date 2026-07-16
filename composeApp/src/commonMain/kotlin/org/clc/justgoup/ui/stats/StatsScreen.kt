@@ -21,7 +21,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import org.clc.justgoup.boulder.GradingSystem
 import org.clc.justgoup.boulder.toDisplayString
 import org.clc.justgoup.climbingSession.ClimbingSessionRepository
 import org.clc.justgoup.climbingSession.GymStats
@@ -111,8 +110,8 @@ private fun GymStatsCard(stats: GymStats, modifier: Modifier = Modifier) {
         if (stats.hardestSentBySystem.isNotEmpty()) {
             Spacer(Modifier.height(BoulderTheme.spacing.small.dp))
             Text(
-                text = "Hardest sent: " + stats.hardestSentBySystem.entries.joinToString("  •  ") { (system, grade) ->
-                    "${system.label()} ${grade.toDisplayString()}"
+                text = "Hardest sent: " + stats.hardestSentBySystem.values.joinToString(" / ") { grade ->
+                    grade.toDisplayString()
                 },
                 style = BoulderTheme.typography.label.copy(color = BoulderTheme.colors.primary)
             )
@@ -128,9 +127,4 @@ private fun TrendBadge(trend: GymTrend) {
         GymTrend.STEADY -> "▬ steady" to BoulderTheme.colors.textSecondary
     }
     Text(text = glyph, style = BoulderTheme.typography.label.copy(color = color))
-}
-
-private fun GradingSystem.label(): String = when (this) {
-    GradingSystem.FRENCH -> "French"
-    GradingSystem.V_SCALE -> "V-Scale"
 }
