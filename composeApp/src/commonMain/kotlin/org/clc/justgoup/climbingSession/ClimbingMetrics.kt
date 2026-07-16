@@ -8,8 +8,6 @@ import org.clc.justgoup.boulder.VGrade
 
 /**
  * Per-gym stats derived from the climber's full session history at one location.
- * Sessions are grouped by [ClimbingSession.location] as an exact string (no trim/normalization --
- * cross-gym alias/calibration handling is a separate, later task and is deliberately not touched here).
  */
 data class GymStats(
     val gym: String,
@@ -23,7 +21,7 @@ data class GymStats(
     val trend: GymTrend?
 )
 
-enum class GymTrend { UP, DOWN, FLAT }
+enum class GymTrend { UP, DOWN, STEADY }
 
 private const val RECENT_WINDOW_SESSIONS = 5
 private const val MIN_TOTAL_SESSIONS_FOR_TREND = 8
@@ -31,8 +29,7 @@ private const val MIN_BOULDERS_IN_WINDOW = 3
 private const val TREND_FLAT_BAND = 0.05
 
 /**
- * Computes one [GymStats] per distinct [ClimbingSession.location] found in [sessions].
- * Pure function -- no I/O, safe to unit test directly with hand-built fixtures.
+ * Computes per distinct [ClimbingSession.location] found in [sessions].
  */
 fun computeGymStats(sessions: List<ClimbingSession>): List<GymStats> =
     sessions
@@ -76,11 +73,21 @@ private fun hardestSentBySystem(boulders: List<Boulder>): Map<GradingSystem, Gra
     }
 }
 
-// Ranks by number+letter / value+beginner only, deliberately ignoring `modifier`/`plus`:
-// frenchGradeSequence()/vGradeSequence() never set them, and a boulder logged with a real
-// +/- must still rank correctly, so ranking can't depend on a field that's sometimes unset.
-private fun FrenchGrade.rankScore(): Int = number * 10 + (letter?.let { it - 'a' + 1 } ?: 0)
-private fun VGrade.rankScore(): Int = if (beginner) -1 else value
+// A `+`/`-` shifts the score by 0.5
+private fun FrenchGrade.rankScore(): Double =
+    number * 10.0 + (letter?.let { it - 'a' + 1 } ?: 0) + modifier.toOffset()
+
+private fun FrenchGrade.Modifier?.toOffset(): Double = when (this) {
+    FrenchGrade.Modifier.Plus -> 0.5
+    FrenchGrade.Modifier.Minus -> -0.5
+    null -> 0.0
+}
+
+private fun VGrade.rankScore(): Double = when {
+    beginner -> -1.0
+    plus -> value + 0.5
+    else -> value.toDouble()
+}
 
 private fun computeTrend(sessionsAtGymNewestFirst: List<ClimbingSession>): GymTrend? {
     if (sessionsAtGymNewestFirst.size < MIN_TOTAL_SESSIONS_FOR_TREND) return null
@@ -98,6 +105,6 @@ private fun computeTrend(sessionsAtGymNewestFirst: List<ClimbingSession>): GymTr
     return when {
         delta > TREND_FLAT_BAND -> GymTrend.UP
         delta < -TREND_FLAT_BAND -> GymTrend.DOWN
-        else -> GymTrend.FLAT
+        else -> GymTrend.STEADY
     }
 }

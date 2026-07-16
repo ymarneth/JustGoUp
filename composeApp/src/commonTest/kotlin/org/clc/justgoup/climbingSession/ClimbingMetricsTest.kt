@@ -61,9 +61,12 @@ class ClimbingMetricsTest {
     }
 
     @Test
-    fun `french ranking ignores the plus modifier so a lower grade never outranks a higher one`() {
+    fun `french ranking never lets a plus modifier outrank a genuinely higher grade`() {
         val boulders = listOf(
-            boulder(grade = Grade.French(FrenchGrade(number = 6, letter = 'c', modifier = FrenchGrade.Modifier.Plus)), sent = true),
+            boulder(
+                grade = Grade.French(FrenchGrade(number = 6, letter = 'c', modifier = FrenchGrade.Modifier.Plus)),
+                sent = true
+            ),
             boulder(grade = Grade.French(FrenchGrade(number = 7, letter = 'a')), sent = true)
         )
         val stats = computeGymStats(listOf(session("Gym A", "2026-01-01T09:00:00", boulders))).single()
@@ -74,16 +77,33 @@ class ClimbingMetricsTest {
     }
 
     @Test
-    fun `french ranking tie ignores modifier when comparing equal number and letter`() {
+    fun `french ranking treats a plus as harder than the same grade without one`() {
         val boulders = listOf(
-            boulder(grade = Grade.French(FrenchGrade(number = 6, letter = 'a', modifier = FrenchGrade.Modifier.Plus)), sent = true),
-            boulder(grade = Grade.French(FrenchGrade(number = 6, letter = 'a')), sent = true)
+            boulder(grade = Grade.French(FrenchGrade(number = 6, letter = 'a')), sent = true),
+            boulder(
+                grade = Grade.French(FrenchGrade(number = 6, letter = 'a', modifier = FrenchGrade.Modifier.Plus)),
+                sent = true
+            )
         )
         val stats = computeGymStats(listOf(session("Gym A", "2026-01-01T09:00:00", boulders))).single()
 
         val hardest = stats.hardestSentBySystem.getValue(GradingSystem.FRENCH) as Grade.French
-        assertEquals(6, hardest.value.number)
-        assertEquals('a', hardest.value.letter)
+        assertEquals(FrenchGrade.Modifier.Plus, hardest.value.modifier)
+    }
+
+    @Test
+    fun `french ranking treats a minus as easier than the same grade without one`() {
+        val boulders = listOf(
+            boulder(grade = Grade.French(FrenchGrade(number = 6, letter = 'a')), sent = true),
+            boulder(
+                grade = Grade.French(FrenchGrade(number = 6, letter = 'a', modifier = FrenchGrade.Modifier.Minus)),
+                sent = true
+            )
+        )
+        val stats = computeGymStats(listOf(session("Gym A", "2026-01-01T09:00:00", boulders))).single()
+
+        val hardest = stats.hardestSentBySystem.getValue(GradingSystem.FRENCH) as Grade.French
+        assertEquals(null, hardest.value.modifier)
     }
 
     @Test
@@ -100,7 +120,7 @@ class ClimbingMetricsTest {
     }
 
     @Test
-    fun `v-scale ranking ignores the plus modifier`() {
+    fun `v-scale ranking never lets a plus modifier outrank a genuinely higher grade`() {
         val boulders = listOf(
             boulder(grade = Grade.VScale(VGrade(value = 5, plus = true)), sent = true),
             boulder(grade = Grade.VScale(VGrade(value = 6)), sent = true)
@@ -109,6 +129,18 @@ class ClimbingMetricsTest {
 
         val hardest = stats.hardestSentBySystem.getValue(GradingSystem.V_SCALE) as Grade.VScale
         assertEquals(6, hardest.value.value)
+    }
+
+    @Test
+    fun `v-scale ranking treats a plus as harder than the same grade without one`() {
+        val boulders = listOf(
+            boulder(grade = Grade.VScale(VGrade(value = 5)), sent = true),
+            boulder(grade = Grade.VScale(VGrade(value = 5, plus = true)), sent = true)
+        )
+        val stats = computeGymStats(listOf(session("Gym A", "2026-01-01T09:00:00", boulders))).single()
+
+        val hardest = stats.hardestSentBySystem.getValue(GradingSystem.V_SCALE) as Grade.VScale
+        assertEquals(true, hardest.value.plus)
     }
 
     @Test
@@ -158,7 +190,7 @@ class ClimbingMetricsTest {
             session("Gym A", "2026-01-08T09:00:00", listOf(boulder(sent = false)))
         )
 
-        assertEquals(GymTrend.FLAT, computeGymStats(older + recent).single().trend)
+        assertEquals(GymTrend.STEADY, computeGymStats(older + recent).single().trend)
     }
 
     @Test
@@ -181,8 +213,8 @@ class ClimbingMetricsTest {
     fun `gyms are ordered by session count descending then alphabetically`() {
         val sessions =
             (1..3).map { session("Zeta", "2026-01-0${it}T09:00:00") } +
-                (1..3).map { session("Alpha", "2026-02-0${it}T09:00:00") } +
-                (1..5).map { session("Beta", "2026-03-0${it}T09:00:00") }
+                    (1..3).map { session("Alpha", "2026-02-0${it}T09:00:00") } +
+                    (1..5).map { session("Beta", "2026-03-0${it}T09:00:00") }
 
         val gymOrder = computeGymStats(sessions).map { it.gym }
 

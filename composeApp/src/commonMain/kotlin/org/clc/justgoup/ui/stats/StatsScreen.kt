@@ -125,7 +125,7 @@ private fun TrendBadge(trend: GymTrend) {
     val (glyph, color) = when (trend) {
         GymTrend.UP -> "▲ improving" to BoulderTheme.colors.success
         GymTrend.DOWN -> "▼ declining" to BoulderTheme.colors.error
-        GymTrend.FLAT -> "▬ steady" to BoulderTheme.colors.textSecondary
+        GymTrend.STEADY -> "▬ steady" to BoulderTheme.colors.textSecondary
     }
     Text(text = glyph, style = BoulderTheme.typography.label.copy(color = color))
 }
