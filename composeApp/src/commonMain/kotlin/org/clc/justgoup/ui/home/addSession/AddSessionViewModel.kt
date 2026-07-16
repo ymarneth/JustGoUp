@@ -2,20 +2,28 @@ package org.clc.justgoup.ui.home.addSession
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.toLocalDateTime
-import org.clc.justgoup.climbingSession.ClimbingSession
 import org.clc.justgoup.climbingSession.ClimbingSessionRepository
 import org.clc.justgoup.climbingSession.StartClimbingSessionCommand
-import kotlin.time.Clock
-import kotlin.time.ExperimentalTime
-import kotlin.uuid.ExperimentalUuidApi
-import kotlin.uuid.Uuid
 
 class AddSessionViewModel(
     private val climbingSessionRepository: ClimbingSessionRepository
 ) : ViewModel() {
+
+    private val _recentLocations = MutableStateFlow<List<String>>(emptyList())
+    val recentLocations: StateFlow<List<String>> = _recentLocations
+
+    init {
+        viewModelScope.launch {
+            _recentLocations.value = climbingSessionRepository
+                .findRecentSessions(offset = 0, limit = RECENT_SESSIONS_SCAN_LIMIT)
+                .map { it.location }
+                .distinct()
+                .take(RECENT_LOCATIONS_LIMIT)
+        }
+    }
 
     fun startSession(locationInput: String, onSessionCreated: (String) -> Unit) {
         val command = StartClimbingSessionCommand(
@@ -27,5 +35,10 @@ class AddSessionViewModel(
             val session = climbingSessionRepository.startSession(command)
             onSessionCreated(session.id)
         }
+    }
+
+    private companion object {
+        const val RECENT_SESSIONS_SCAN_LIMIT = 40
+        const val RECENT_LOCATIONS_LIMIT = 5
     }
 }
