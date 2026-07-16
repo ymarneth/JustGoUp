@@ -1,12 +1,17 @@
 package org.clc.justgoup.ui.home.addSession
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -17,6 +22,7 @@ import org.clc.justgoup.climbingSession.ClimbingSessionRepository
 import org.clc.justgoup.ui.theme.BoulderTheme
 import org.clc.justgoup.ui.theme.components.BoulderButton
 import org.clc.justgoup.ui.theme.components.BoulderTextField
+import org.clc.justgoup.ui.theme.components.SelectableChip
 import org.koin.compose.koinInject
 
 @Composable
@@ -25,13 +31,16 @@ fun AddSession(
 ) {
     val repository = koinInject<ClimbingSessionRepository>()
     val viewModel = remember { AddSessionViewModel(repository) }
+    val recentLocations by viewModel.recentLocations.collectAsState()
 
     var location by remember { mutableStateOf("") }
 
     val minLength = 3
     val isValid = location.length >= minLength
 
-    Column {
+    val scrollState = rememberScrollState()
+
+    Column(modifier = Modifier.fillMaxWidth().verticalScroll(scrollState)) {
         Text(
             text = "Start Session",
             style = BoulderTheme.typography.titleMedium,
@@ -46,7 +55,8 @@ fun AddSession(
             onValueChange = { location = it },
             placeholder = "Location",
             maxLength = 50,
-            isError = !isValid && location.isNotEmpty()
+            isError = !isValid && location.isNotEmpty(),
+            showClearButton = true
         )
 
         // Error message
@@ -58,6 +68,25 @@ fun AddSession(
                 color = MaterialTheme.colorScheme.error,
                 style = MaterialTheme.typography.bodySmall
             )
+        }
+
+        if (recentLocations.isNotEmpty()) {
+            Spacer(Modifier.height(BoulderTheme.spacing.small.dp))
+
+            FlowRow(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(BoulderTheme.spacing.small.dp),
+                verticalArrangement = Arrangement.spacedBy(BoulderTheme.spacing.small.dp)
+            ) {
+                recentLocations.forEach { loc ->
+                    SelectableChip(
+                        label = loc,
+                        value = loc,
+                        selectedValue = location,
+                        onSelect = { location = it }
+                    )
+                }
+            }
         }
 
         Spacer(Modifier.height(BoulderTheme.spacing.medium.dp))
