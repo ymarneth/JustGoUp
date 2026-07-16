@@ -55,7 +55,8 @@ fun AddSession(
             onValueChange = { location = it },
             placeholder = "Location",
             maxLength = 50,
-            isError = !isValid && location.isNotEmpty()
+            isError = !isValid && location.isNotEmpty(),
+            showClearButton = true
         )
 
         // Error message
