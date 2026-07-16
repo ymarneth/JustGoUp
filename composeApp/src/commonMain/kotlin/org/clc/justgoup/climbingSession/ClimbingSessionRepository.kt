@@ -32,7 +32,7 @@ internal class ClimbingSessionRepositoryImpl(
 
     override suspend fun startSession(command: StartClimbingSessionCommand): ClimbingSession {
         val session = ClimbingSession(
-            location = command.location,
+            location = command.location.trim(),
             notes = command.notes
         )
 
@@ -51,7 +51,7 @@ internal class ClimbingSessionRepositoryImpl(
         val session = getSessionById(id) ?: return
 
         val updatedSession = session.copy(
-            location = command.location ?: session.location,
+            location = command.location?.trim() ?: session.location,
             startTime = command.startTime ?: session.startTime,
             notes = command.notes ?: session.notes
         )
