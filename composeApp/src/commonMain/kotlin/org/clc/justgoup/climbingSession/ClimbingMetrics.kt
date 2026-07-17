@@ -33,7 +33,7 @@ private const val TREND_FLAT_BAND = 0.05
  */
 fun computeGymStats(sessions: List<ClimbingSession>): List<GymStats> =
     sessions
-        .groupBy { it.location }
+        .groupBy { it.location.trim() }
         .map { (gym, gymSessions) -> gymSessions.toGymStats(gym) }
         .sortedWith(compareByDescending<GymStats> { it.sessionCount }.thenBy { it.gym })
 
