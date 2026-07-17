@@ -156,6 +156,19 @@ class ClimbingMetricsTest {
     }
 
     @Test
+    fun `locations with surrounding whitespace merge with the trimmed location`() {
+        val sessions = listOf(
+            session("Boulder Gym", "2026-01-01T09:00:00"),
+            session("Boulder Gym ", "2026-01-02T09:00:00")
+        )
+
+        val stats = computeGymStats(sessions)
+
+        assertEquals(1, stats.size)
+        assertEquals(2, stats.single().sessionCount)
+    }
+
+    @Test
     fun `trend is null with fewer than 8 total sessions at a gym`() {
         val sessions = (1..7).map { session("Gym A", "2026-01-0${it}T09:00:00", listOf(boulder(sent = true))) }
 
