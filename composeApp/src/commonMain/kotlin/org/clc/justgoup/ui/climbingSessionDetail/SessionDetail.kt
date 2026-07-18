@@ -37,6 +37,7 @@ fun SessionDetailScreen(
     val repository = koinInject<ClimbingSessionRepository>()
     val viewModel = remember { SessionDetailViewModel(repository, sessionId) }
     val session by viewModel.session.collectAsState(initial = null)
+    val sessionStats by viewModel.sessionStats.collectAsState(initial = null)
 
     val localBoulders = remember(session?.boulders) {
         session?.boulders?.toMutableStateList() ?: mutableStateListOf()
@@ -47,7 +48,7 @@ fun SessionDetailScreen(
 
     session?.let {
         Column(modifier = Modifier.fillMaxSize()) {
-            SessionHeader(session = it)
+            SessionHeader(session = it, stats = sessionStats)
 
             Spacer(Modifier.height(BoulderTheme.spacing.medium.dp))
 

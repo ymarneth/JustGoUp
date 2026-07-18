@@ -349,6 +349,108 @@ class ClimbingMetricsTest {
         assertEquals(listOf("Beta", "Alpha", "Zeta"), gymOrder)
     }
 
+    @Test
+    fun `session stats with no boulders has null rates and no hardest sent`() {
+        val current = session("Gym A", "2026-01-08T09:00:00")
+
+        val stats = computeSessionStats(current, otherSessionsAtSameGym = emptyList())
+
+        assertNull(stats.sendRate)
+        assertNull(stats.flashRate)
+        assertTrue(stats.hardestSentBySystem.isEmpty())
+        assertNull(stats.comparisonToUsual)
+    }
+
+    @Test
+    fun `session stats flash rate is of sends not all boulders in the session`() {
+        val current = session(
+            "Gym A", "2026-01-08T09:00:00",
+            listOf(
+                boulder(sent = true, flash = true),
+                boulder(sent = true, flash = false),
+                boulder(sent = false)
+            )
+        )
+
+        val stats = computeSessionStats(current, otherSessionsAtSameGym = emptyList())
+
+        assertEquals(2.0 / 3, stats.sendRate)
+        assertEquals(0.5, stats.flashRate)
+    }
+
+    @Test
+    fun `session comparison is null with fewer than three other sessions at the gym`() {
+        val current = session("Gym A", "2026-01-08T09:00:00", listOf(boulder(sent = true)))
+        val others = (1..2).map { session("Gym A", "2026-01-0${it}T09:00:00", listOf(boulder(sent = true))) }
+
+        assertNull(computeSessionStats(current, others).comparisonToUsual)
+    }
+
+    @Test
+    fun `session comparison is null when other sessions at the gym have no boulders logged`() {
+        val current = session("Gym A", "2026-01-08T09:00:00", listOf(boulder(sent = true)))
+        val others = (1..3).map { session("Gym A", "2026-01-0${it}T09:00:00") }
+
+        assertNull(computeSessionStats(current, others).comparisonToUsual)
+    }
+
+    @Test
+    fun `session comparison excludes the session itself even if passed in as an other session`() {
+        val current = session("Gym A", "2026-01-08T09:00:00", listOf(boulder(sent = true)))
+        val others = (1..2).map { session("Gym A", "2026-01-0${it}T09:00:00", listOf(boulder(sent = true))) }
+
+        // Only 2 *other* sessions once `current` is excluded -- below the minimum, so still null.
+        assertNull(computeSessionStats(current, others + current).comparisonToUsual)
+    }
+
+    @Test
+    fun `session comparison is better when this session sent clearly more than usual`() {
+        val current = session(
+            "Gym A", "2026-01-08T09:00:00",
+            List(4) { boulder(sent = true) }
+        )
+        val others = (1..3).map { session("Gym A", "2026-01-0${it}T09:00:00", listOf(boulder(sent = false))) }
+
+        assertEquals(SessionComparison.BETTER, computeSessionStats(current, others).comparisonToUsual)
+    }
+
+    @Test
+    fun `session comparison is worse when this session sent clearly less than usual`() {
+        val current = session(
+            "Gym A", "2026-01-08T09:00:00",
+            List(4) { boulder(sent = false) }
+        )
+        val others = (1..3).map { session("Gym A", "2026-01-0${it}T09:00:00", listOf(boulder(sent = true))) }
+
+        assertEquals(SessionComparison.WORSE, computeSessionStats(current, others).comparisonToUsual)
+    }
+
+    @Test
+    fun `session comparison is typical when the delta is small enough to stay inside the flat band`() {
+        // This session: 2/5 = 0.4. Usual: 3/8 = 0.375. Delta = 0.025 -- comfortably inside +/- 0.05.
+        val current = session(
+            "Gym A", "2026-01-08T09:00:00",
+            listOf(
+                boulder(sent = true), boulder(sent = true),
+                boulder(sent = false), boulder(sent = false), boulder(sent = false)
+            )
+        )
+        val others = listOf(
+            session("Gym A", "2026-01-01T09:00:00", listOf(boulder(sent = true))),
+            session("Gym A", "2026-01-02T09:00:00", listOf(boulder(sent = false))),
+            session(
+                "Gym A", "2026-01-03T09:00:00",
+                listOf(
+                    boulder(sent = true), boulder(sent = true),
+                    boulder(sent = false), boulder(sent = false),
+                    boulder(sent = false), boulder(sent = false)
+                )
+            )
+        )
+
+        assertEquals(SessionComparison.TYPICAL, computeSessionStats(current, others).comparisonToUsual)
+    }
+
     private fun session(location: String, startTime: String, boulders: List<Boulder> = emptyList()) = ClimbingSession(
         location = location,
         startTime = LocalDateTime.parse(startTime),

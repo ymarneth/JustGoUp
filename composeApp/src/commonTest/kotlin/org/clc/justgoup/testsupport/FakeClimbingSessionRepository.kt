@@ -10,11 +10,12 @@ import org.clc.justgoup.climbingSession.UpdateBoulderCommand
 
 internal class FakeClimbingSessionRepository(
     recentSessions: List<RecentClimbingSession> = emptyList(),
-    private val sessionsToExport: List<ClimbingSession> = emptyList(),
+    sessionsToExport: List<ClimbingSession> = emptyList(),
     private val restoreResult: Int = 0
 ) : ClimbingSessionRepository {
 
     private val recentSessionsBacking = recentSessions.toMutableList()
+    private val sessionsBacking = sessionsToExport.toMutableList()
 
     val findRecentSessionsCalls = mutableListOf<Pair<Int, Int>>()
     val deletedIds = mutableListOf<String>()
@@ -26,7 +27,7 @@ internal class FakeClimbingSessionRepository(
         return recentSessionsBacking.drop(offset).take(limit)
     }
 
-    override suspend fun getSessionById(id: String): ClimbingSession? = error("not used in this test")
+    override suspend fun getSessionById(id: String): ClimbingSession? = sessionsBacking.find { it.id == id }
 
     override suspend fun startSession(command: StartClimbingSessionCommand): ClimbingSession =
         error("not used in this test")
@@ -40,8 +41,15 @@ internal class FakeClimbingSessionRepository(
 
     override suspend fun addBoulderToSession(sessionId: String, command: CreateBoulderCommand) = Unit
     override suspend fun updateBoulderInSession(boulderId: String, command: UpdateBoulderCommand) = Unit
-    override suspend fun deleteBoulderFromSession(boulderId: String) = Unit
-    override suspend fun exportAllSessions(): List<ClimbingSession> = sessionsToExport
+
+    override suspend fun deleteBoulderFromSession(boulderId: String) {
+        val ownerIndex = sessionsBacking.indexOfFirst { session -> session.boulders.any { it.id == boulderId } }
+        if (ownerIndex == -1) return
+        val owner = sessionsBacking[ownerIndex]
+        sessionsBacking[ownerIndex] = owner.copy(boulders = owner.boulders.filterNot { it.id == boulderId })
+    }
+
+    override suspend fun exportAllSessions(): List<ClimbingSession> = sessionsBacking
 
     override suspend fun restoreSessions(sessions: List<ClimbingSession>): Int {
         restoredWith = sessions
