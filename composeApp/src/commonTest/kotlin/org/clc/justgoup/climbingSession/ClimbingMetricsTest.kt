@@ -29,6 +29,121 @@ class ClimbingMetricsTest {
         assertEquals(0.0, stats.sendRate)
         assertNull(stats.flashRate)
         assertTrue(stats.hardestSentBySystem.isEmpty())
+        assertTrue(stats.workingGradeBySystem.isEmpty())
+    }
+
+    @Test
+    fun `average boulders per session divides total boulders by session count`() {
+        val sessions = listOf(
+            session("Gym A", "2026-01-01T09:00:00", List(3) { boulder() }),
+            session("Gym A", "2026-01-02T09:00:00", List(5) { boulder() })
+        )
+
+        val stats = computeGymStats(sessions).single()
+
+        assertEquals(4.0, stats.averageBouldersPerSession) // 8 boulders / 2 sessions
+    }
+
+    @Test
+    fun `working grade is the hardest grade sent at least three quarters of the time`() {
+        val sessionA = session(
+            "Gym A", "2026-01-01T09:00:00",
+            listOf(
+                boulder(grade = Grade.VScale(VGrade(value = 2)), sent = true),
+                boulder(grade = Grade.VScale(VGrade(value = 2)), sent = true),
+                boulder(grade = Grade.VScale(VGrade(value = 4)), sent = true),
+                boulder(grade = Grade.VScale(VGrade(value = 4)), sent = true),
+                boulder(grade = Grade.VScale(VGrade(value = 6)), sent = true),
+                boulder(grade = Grade.VScale(VGrade(value = 6)), sent = true)
+            )
+        )
+        val sessionB = session(
+            "Gym A", "2026-01-02T09:00:00",
+            listOf(
+                boulder(grade = Grade.VScale(VGrade(value = 2)), sent = true),
+                boulder(grade = Grade.VScale(VGrade(value = 2)), sent = false), // V2: 3/4 -- qualifies
+                boulder(grade = Grade.VScale(VGrade(value = 4)), sent = true),
+                boulder(grade = Grade.VScale(VGrade(value = 4)), sent = false), // V4: 3/4 -- qualifies, harder
+                boulder(grade = Grade.VScale(VGrade(value = 6)), sent = false),
+                boulder(grade = Grade.VScale(VGrade(value = 6)), sent = false) // V6: 2/4 -- too low, ignored
+            )
+        )
+
+        val stats = computeGymStats(listOf(sessionA, sessionB)).single()
+
+        assertEquals(Grade.VScale(VGrade(value = 4)), stats.workingGradeBySystem[GradingSystem.V_SCALE])
+    }
+
+    @Test
+    fun `working grade requires a minimum number of boulders logged at that grade`() {
+        // A single send is a 100% rate, but one boulder is nowhere near enough to call it "working".
+        val boulders = listOf(boulder(grade = Grade.VScale(VGrade(value = 5)), sent = true))
+
+        val stats = computeGymStats(listOf(session("Gym A", "2026-01-01T09:00:00", boulders))).single()
+
+        assertNull(stats.workingGradeBySystem[GradingSystem.V_SCALE])
+    }
+
+    @Test
+    fun `working grade requires attempts across multiple sessions rather than one good session`() {
+        // 4 sends out of 4 in a single session -- a perfect rate, but all from one occasion.
+        val boulders = List(4) { boulder(grade = Grade.VScale(VGrade(value = 5)), sent = true) }
+
+        val stats = computeGymStats(listOf(session("Gym A", "2026-01-01T09:00:00", boulders))).single()
+
+        assertNull(stats.workingGradeBySystem[GradingSystem.V_SCALE])
+    }
+
+    @Test
+    fun `working grade treats a plus modifier as its own grade rather than merging with the base`() {
+        val sessionA = session(
+            "Gym A", "2026-01-01T09:00:00",
+            listOf(
+                boulder(grade = Grade.VScale(VGrade(value = 3, plus = true)), sent = true),
+                boulder(grade = Grade.VScale(VGrade(value = 3, plus = true)), sent = true)
+            )
+        )
+        val sessionB = session(
+            "Gym A", "2026-01-02T09:00:00",
+            listOf(
+                boulder(grade = Grade.VScale(VGrade(value = 3, plus = true)), sent = true),
+                boulder(grade = Grade.VScale(VGrade(value = 3, plus = true)), sent = false)
+            )
+        )
+
+        val stats = computeGymStats(listOf(sessionA, sessionB)).single()
+
+        assertEquals(Grade.VScale(VGrade(value = 3, plus = true)), stats.workingGradeBySystem[GradingSystem.V_SCALE])
+    }
+
+    @Test
+    fun `working grade prefers a qualifying plus variant over the qualifying base grade`() {
+        val sessionA = session(
+            "Gym A", "2026-01-01T09:00:00",
+            listOf(
+                boulder(grade = Grade.VScale(VGrade(value = 3)), sent = true),
+                boulder(grade = Grade.VScale(VGrade(value = 3, plus = true)), sent = true)
+            )
+        )
+        val sessionB = session(
+            "Gym A", "2026-01-02T09:00:00",
+            listOf(
+                boulder(grade = Grade.VScale(VGrade(value = 3)), sent = true),
+                boulder(grade = Grade.VScale(VGrade(value = 3, plus = true)), sent = true)
+            )
+        )
+        val sessionC = session(
+            "Gym A", "2026-01-03T09:00:00",
+            listOf(
+                boulder(grade = Grade.VScale(VGrade(value = 3)), sent = true),
+                boulder(grade = Grade.VScale(VGrade(value = 3, plus = true)), sent = true)
+            )
+        )
+
+        val stats = computeGymStats(listOf(sessionA, sessionB, sessionC)).single()
+
+        // Both V3 and V3+ qualify (3/3, 3 sessions each) -- the harder one should win.
+        assertEquals(Grade.VScale(VGrade(value = 3, plus = true)), stats.workingGradeBySystem[GradingSystem.V_SCALE])
     }
 
     @Test

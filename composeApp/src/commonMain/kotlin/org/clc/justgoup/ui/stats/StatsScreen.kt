@@ -21,6 +21,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import kotlin.math.roundToInt
 import org.clc.justgoup.boulder.toDisplayString
 import org.clc.justgoup.climbingSession.ClimbingSessionRepository
 import org.clc.justgoup.climbingSession.GymStats
@@ -94,7 +95,8 @@ private fun GymStatsCard(stats: GymStats, modifier: Modifier = Modifier) {
         Spacer(Modifier.height(BoulderTheme.spacing.tiny.dp))
 
         Text(
-            text = "${stats.sessionCount} sessions • ${stats.boulderCount} boulders",
+            text = "${stats.sessionCount} sessions • ${stats.boulderCount} boulders" +
+                " • avg ${stats.averageBouldersPerSession.roundToInt()}/session",
             style = BoulderTheme.typography.body,
             color = BoulderTheme.colors.textSecondary
         )
@@ -107,8 +109,18 @@ private fun GymStatsCard(stats: GymStats, modifier: Modifier = Modifier) {
 
         StatBar(label = "Flash rate", ratio = stats.flashRate?.toFloat(), modifier = Modifier.fillMaxWidth())
 
-        if (stats.hardestSentBySystem.isNotEmpty()) {
+        if (stats.workingGradeBySystem.isNotEmpty()) {
             Spacer(Modifier.height(BoulderTheme.spacing.small.dp))
+            Text(
+                text = "Highest consistent send: " + stats.workingGradeBySystem.values.joinToString(" / ") { grade ->
+                    grade.toDisplayString()
+                },
+                style = BoulderTheme.typography.label.copy(color = BoulderTheme.colors.textSecondary)
+            )
+        }
+
+        if (stats.hardestSentBySystem.isNotEmpty()) {
+            Spacer(Modifier.height(BoulderTheme.spacing.tiny.dp))
             Text(
                 text = "Hardest sent: " + stats.hardestSentBySystem.values.joinToString(" / ") { grade ->
                     grade.toDisplayString()

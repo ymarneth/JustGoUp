@@ -17,7 +17,9 @@ data class GymStats(
     val flashCount: Int,
     val sendRate: Double?,
     val flashRate: Double?,
+    val averageBouldersPerSession: Double,
     val hardestSentBySystem: Map<GradingSystem, Grade>,
+    val workingGradeBySystem: Map<GradingSystem, Grade>,
     val trend: GymTrend?
 )
 
@@ -27,6 +29,9 @@ private const val RECENT_WINDOW_SESSIONS = 5
 private const val MIN_TOTAL_SESSIONS_FOR_TREND = 8
 private const val MIN_BOULDERS_IN_WINDOW = 3
 private const val TREND_FLAT_BAND = 0.05
+private const val WORKING_GRADE_SEND_RATE_THRESHOLD = 0.75
+private const val MIN_BOULDERS_AT_GRADE = 3
+private const val MIN_SESSIONS_AT_GRADE = 2
 
 /**
  * Computes per distinct [ClimbingSession.location] found in [sessions].
@@ -51,7 +56,9 @@ private fun List<ClimbingSession>.toGymStats(gym: String): GymStats {
         flashCount = flashCount,
         sendRate = boulders.takeIf { it.isNotEmpty() }?.let { sendCount.toDouble() / it.size },
         flashRate = sendCount.takeIf { it > 0 }?.let { flashCount.toDouble() / it },
+        averageBouldersPerSession = boulders.size.toDouble() / size,
         hardestSentBySystem = hardestSentBySystem(boulders),
+        workingGradeBySystem = workingGradeBySystem(this),
         trend = computeTrend(newestFirst)
     )
 }
@@ -72,6 +79,55 @@ private fun hardestSentBySystem(boulders: List<Boulder>): Map<GradingSystem, Gra
         hardestV?.let { put(GradingSystem.V_SCALE, it) }
     }
 }
+
+// The working grade is the hardest exact grade (`+`/`-` counts as its own grade)
+// sent at least WORKING_GRADE_SEND_RATE_THRESHOLD of the time, across at least
+// MIN_SESSIONS_AT_GRADE sessions and MIN_BOULDERS_AT_GRADE attempts - unlike hardestSentBySystem
+// (the occasional "project" send), this needs every attempt, not just the sends.
+private fun workingGradeBySystem(sessions: List<ClimbingSession>): Map<GradingSystem, Grade> {
+    val frenchEntries = sessions.flatMap { session ->
+        session.boulders.mapNotNull {
+            (it.grade as? Grade.French)?.value?.let { grade ->
+                Attempt(
+                    grade,
+                    it.sent,
+                    session.id
+                )
+            }
+        }
+    }
+    val vEntries = sessions.flatMap { session ->
+        session.boulders.mapNotNull {
+            (it.grade as? Grade.VScale)?.value?.let { grade ->
+                Attempt(
+                    grade,
+                    it.sent,
+                    session.id
+                )
+            }
+        }
+    }
+
+    val workingFrench = frenchEntries.workingGrade { it.rankScore() }?.let { Grade.French(it) }
+    val workingV = vEntries.workingGrade { it.rankScore() }?.let { Grade.VScale(it) }
+
+    return buildMap {
+        workingFrench?.let { put(GradingSystem.FRENCH, it) }
+        workingV?.let { put(GradingSystem.V_SCALE, it) }
+    }
+}
+
+private data class Attempt<G>(val grade: G, val sent: Boolean, val sessionId: String)
+
+private fun <G> List<Attempt<G>>.workingGrade(rankOf: (G) -> Double): G? =
+    groupBy { it.grade }
+        .filterValues { attempts -> attempts.size >= MIN_BOULDERS_AT_GRADE }
+        .filterValues { attempts -> attempts.map { it.sessionId }.distinct().size >= MIN_SESSIONS_AT_GRADE }
+        .filterValues { attempts ->
+            attempts.count { it.sent }.toDouble() / attempts.size >= WORKING_GRADE_SEND_RATE_THRESHOLD
+        }
+        .keys
+        .maxByOrNull(rankOf)
 
 // A `+`/`-` shifts the score by 0.5
 private fun FrenchGrade.rankScore(): Double =
