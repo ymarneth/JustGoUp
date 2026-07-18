@@ -25,6 +25,19 @@ data class GymStats(
 
 enum class GymTrend { UP, DOWN, STEADY }
 
+/**
+ * Stats for a single session, plus how it compares to the climber's other sessions at the
+ * same gym.
+ */
+data class SessionStats(
+    val sendRate: Double?,
+    val flashRate: Double?,
+    val hardestSentBySystem: Map<GradingSystem, Grade>,
+    val comparisonToUsual: SessionComparison?
+)
+
+enum class SessionComparison { BETTER, WORSE, TYPICAL }
+
 private const val RECENT_WINDOW_SESSIONS = 5
 private const val MIN_TOTAL_SESSIONS_FOR_TREND = 8
 private const val MIN_BOULDERS_IN_WINDOW = 3
@@ -32,6 +45,8 @@ private const val TREND_FLAT_BAND = 0.05
 private const val WORKING_GRADE_SEND_RATE_THRESHOLD = 0.75
 private const val MIN_BOULDERS_AT_GRADE = 3
 private const val MIN_SESSIONS_AT_GRADE = 2
+private const val MIN_OTHER_SESSIONS_FOR_COMPARISON = 3
+private const val SESSION_COMPARISON_FLAT_BAND = 0.05
 
 /**
  * Computes per distinct [ClimbingSession.location] found in [sessions].
@@ -61,6 +76,46 @@ private fun List<ClimbingSession>.toGymStats(gym: String): GymStats {
         workingGradeBySystem = workingGradeBySystem(this),
         trend = computeTrend(newestFirst)
     )
+}
+
+/**
+ * Stats for [session] alone, compared against [otherSessionsAtSameGym] to say whether this
+ * session ran better, worse, or typical for this gym. [session] itself is excluded from the
+ * comparison even if present in [otherSessionsAtSameGym].
+ */
+fun computeSessionStats(session: ClimbingSession, otherSessionsAtSameGym: List<ClimbingSession>): SessionStats {
+    val boulders = session.boulders
+    val sendCount = boulders.count { it.sent }
+    val flashCount = boulders.count { it.flash }
+    val sendRate = boulders.takeIf { it.isNotEmpty() }?.let { sendCount.toDouble() / it.size }
+    val others = otherSessionsAtSameGym.filterNot { it.id == session.id }
+
+    return SessionStats(
+        sendRate = sendRate,
+        flashRate = sendCount.takeIf { it > 0 }?.let { flashCount.toDouble() / it },
+        hardestSentBySystem = hardestSentBySystem(boulders),
+        comparisonToUsual = compareToUsualPerformance(sendRate, others)
+    )
+}
+
+private fun compareToUsualPerformance(
+    sessionSendRate: Double?,
+    otherSessionsAtSameGym: List<ClimbingSession>
+): SessionComparison? {
+    if (sessionSendRate == null) return null
+    if (otherSessionsAtSameGym.size < MIN_OTHER_SESSIONS_FOR_COMPARISON) return null
+
+    val otherBoulders = otherSessionsAtSameGym.flatMap { it.boulders }
+    if (otherBoulders.isEmpty()) return null
+
+    val usualSendRate = otherBoulders.count { it.sent }.toDouble() / otherBoulders.size
+    val delta = sessionSendRate - usualSendRate
+
+    return when {
+        delta > SESSION_COMPARISON_FLAT_BAND -> SessionComparison.BETTER
+        delta < -SESSION_COMPARISON_FLAT_BAND -> SessionComparison.WORSE
+        else -> SessionComparison.TYPICAL
+    }
 }
 
 private fun hardestSentBySystem(boulders: List<Boulder>): Map<GradingSystem, Grade> {
