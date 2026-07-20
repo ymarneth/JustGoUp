@@ -28,8 +28,6 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-    outputs:
-      apk-path: ${{ steps.set-output.outputs.artifact-path }}
 
     steps:
       - name: Checkout code
@@ -92,9 +90,4 @@ jobs:
         with:
           name: JustGoUp-Android-${{ inputs.version }}-Release
           path: ${{ inputs.project-dir }}/build/outputs/apk/release/justgoup-release-${{ inputs.version }}.apk
-
-      - name: Set output
-        id: set-output
-        run: |
-          echo "artifact-path=${{ inputs.project-dir }}/build/outputs/apk/release/justgoup-release-${{ inputs.version }}.apk" >> $GITHUB_OUTPUT
 
