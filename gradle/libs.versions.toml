@@ -18,7 +18,7 @@ kotlin = "2.4.10"
 kotlin-serialization = "1.11.0"
 kotlin-datetime = "0.8.0"
 kotlin-coroutines = "1.11.0"
-sqldelight = "2.3.2"
+sqldelight = "2.4.0"
 koin = "4.2.2"
 benManesVersions = "0.54.0"
 
